@@ -1,0 +1,18 @@
+{
+  "name": "ticketmanager",
+  "version": "1.0.0",
+  "description": "Ticket-Manger Projekt von Noah, John und Mattis",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "ticketmanager"
+  ],
+  "author": "Noah, John und Mattis",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^38.3.0"
+  }
+}
