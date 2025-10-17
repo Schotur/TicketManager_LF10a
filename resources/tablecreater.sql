@@ -1,3 +1,6 @@
+CREATE DATABASE IF NOT EXISTS ticket_manager CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE ticket_manager;
+
 CREATE TABLE rolle 
 (
 	rolle_id INTEGER NOT NULL AUTO_INCREMENT,
