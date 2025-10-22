@@ -20,9 +20,10 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     ticketsUl.innerHTML = '';
+    console.log(rows);
     for (const t of rows) {
       const li = document.createElement('li');
-      li.innerHTML = `<strong>[${t.status}] ${escapeHtml(t.title)}</strong><div>${escapeHtml(t.description || '')}</div><small>von ${escapeHtml(t.customer || 'Unbekannt')} — ${t.created_at}</small>`;
+      li.innerHTML = `<strong>[${t.status}] ${escapeHtml(t.titel)}</strong><div>${escapeHtml(t.beschreibung || '')}</div><small>von ${escapeHtml(t.erstellt_von.vorname || 'Unbekannt')} — ${t.erstellt_am}</small>`;
       ticketsUl.appendChild(li);
     }
   }
