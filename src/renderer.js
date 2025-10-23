@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const createBtn = document.getElementById('createTicketBtn');
   const titleInput = document.getElementById('title');
   const descInput = document.getElementById('description');
+  const cateInput = document.getElementById('category');
   const createResult = document.getElementById('createResult');
 
   async function loadTickets() {
@@ -22,8 +23,9 @@ document.addEventListener('DOMContentLoaded', () => {
     ticketsUl.innerHTML = '';
     console.log(rows);
     for (const t of rows) {
+      const { user } = await window.api.getUser(t.erstellt_von);
       const li = document.createElement('li');
-      li.innerHTML = `<strong>[${t.status}] ${escapeHtml(t.titel)}</strong><div>${escapeHtml(t.beschreibung || '')}</div><small>von ${escapeHtml(t.erstellt_von.vorname || 'Unbekannt')} — ${t.erstellt_am}</small>`;
+      li.innerHTML = `<strong>[${t.status}] ${escapeHtml(t.titel)}</strong><div>${escapeHtml(t.beschreibung || '')}</div><small>von ${user.vorname} ${user.nachname} — ${t.erstellt_am}</small>`;
       ticketsUl.appendChild(li);
     }
   }
@@ -38,6 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
   createBtn.addEventListener('click', async () => {
     const title = titleInput.value.trim();
     const description = descInput.value.trim();
+    const category = cateInput.value;
     if (!title) {
       createResult.textContent = 'Bitte Betreff eingeben.';
       createResult.style.color = 'red';
@@ -45,12 +48,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     createResult.textContent = 'Erstelle...';
     createResult.style.color = 'black';
-    const res = await window.api.createTicket({ title, description, customer_id: 1 });
+    const res = await window.api.createTicket({ title, description, customer_id: 1, category, status: "Offen" });
     if (res.success) {
       createResult.textContent = `Ticket erstellt (ID ${res.id}).`;
       createResult.style.color = 'green';
       titleInput.value = '';
       descInput.value = '';
+      cateInput.value = 1;
       loadTickets();
     } else {
       createResult.textContent = `Fehler: ${res.error}`;

@@ -49,7 +49,7 @@ ipcMain.handle('tickets:getAll', async () => {
 // Neues Ticket erstellen
 ipcMain.handle('tickets:create', async (event, ticket) => {
   try {
-    const id = await db.createTicket(ticket.title, ticket.description, ticket.customer_id);
+    const id = await db.createTicket(ticket.title, ticket.description, ticket.customer_id, ticket.category, ticket.status);
     return { success: true, id };
   } catch (err) {
     console.error('DB createTicket error', err);
@@ -62,6 +62,17 @@ ipcMain.handle('comments:create', async (event, comment) => {
   try {
     const id = await db.createComment(comment.ticket_id, comment.author_id, comment.message);
     return { success: true, id };
+  } catch (err) {
+    console.error('DB createComment error', err);
+    return { success: false, error: err.message };
+  }
+});
+
+// Usernamen bekommen
+ipcMain.handle('user:get', async (event, user_id) => {
+  try {
+    const user = await db.getUser(user_id)
+    return { success: true, user };
   } catch (err) {
     console.error('DB createComment error', err);
     return { success: false, error: err.message };

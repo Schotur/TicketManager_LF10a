@@ -20,13 +20,13 @@ async function getTickets() {
 }
 
 
-async function createTicket(title, description, customer_id) {
+async function createTicket(title, description, customer_id, category, status) {
   let conn;
   try {
     conn = await pool.getConnection();
     await conn.query(
-      'INSERT INTO ticket (titel, beschreibung, kategorie_id, erstellt_von, erstellt_am) VALUES (?, ?, 1, 2, ?)',
-      [title, description, new Date()]
+      'INSERT INTO ticket (titel, beschreibung, kategorie_id, erstellt_von, erstellt_am, status) VALUES (?, ?, ?, ?, ?, ?)',
+      [title, description, category, customer_id, new Date(), status]
     );
   } finally {
     if (conn) conn.release();
@@ -38,11 +38,11 @@ async function getUser(user_id) {
   try {
     conn = await pool.getConnection();
     const user = await conn.query('SELECT * FROM benutzer WHERE benutzer_id = ?', [user_id]);
-    return user;
+    return user[0];
   } finally { 
     if (conn) conn.release();
   }
 }
 
 
-module.exports = { getTickets, createTicket };
+module.exports = { getTickets, createTicket, getUser };
