@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
     for (const t of rows) {
       const { user } = await window.api.getUser(t.erstellt_von);
       const li = document.createElement('li');
-      li.innerHTML = `<strong>[${t.status}] ${escapeHtml(t.titel)}</strong><div>${escapeHtml(t.beschreibung || '')}</div><small>von ${user.vorname} ${user.nachname} — ${t.erstellt_am}</small>`;
+      li.innerHTML = `<a href="ticketdetail.html?id=${t.ticket_id}"><strong>[${t.status}] ${escapeHtml(t.titel)}</strong></a><div>${escapeHtml(t.beschreibung || '')}</div><small>von ${user.vorname} ${user.nachname} — ${t.erstellt_am}</small>`;
       ticketsUl.appendChild(li);
     }
   }
