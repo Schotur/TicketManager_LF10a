@@ -1,5 +1,6 @@
 // renderer.js
 document.addEventListener('DOMContentLoaded', () => {
+  const loginbtn = document.getElementById('loginBtn');
   const ticketsUl = document.getElementById('tickets');
   const refreshBtn = document.getElementById('refreshBtn');
   const createBtn = document.getElementById('createTicketBtn');
@@ -59,6 +60,33 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       createResult.textContent = `Fehler: ${res.error}`;
       createResult.style.color = 'red';
+    }
+  });
+
+  loginbtn.addEventListener('click', async (event) => {
+    event.preventDefault();
+
+    // Username und Passwort holen
+    const email = document.getElementById('eMail_login').value;
+    const password = document.getElementById('password_login').value;
+    
+    // Daten aus der Datenbank prüfen
+    const res = await window.api.getUserByEmail(email);
+    if (res.success) {
+      // Benutzer gefunden, Passwort prüfen
+      const user = res.user;
+      if (user.passwort === password) {
+        // Erfolgreich eingeloggt
+        // Weiterleitung zur Hauptseite
+        // TODO
+        window.location.href = `index.html?id=${user.benutzer_id}`;
+
+        // Hier kannst du zur Hauptseite weiterleiten oder andere Aktionen durchführen
+      } else {
+        alert('Falsches Passwort. Bitte versuche es erneut.');
+      }
+    } else {
+      alert('Benutzer nicht gefunden. Bitte überprüfe deine Eingaben.');
     }
   });
 

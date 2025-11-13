@@ -3,7 +3,7 @@ const mariadb = require('mariadb');
 const pool = mariadb.createPool({
   host: 'localhost',
   user: 'root',
-  password: '',
+  password: '12345',
   database: 'ticket_manager',
   connectionLimit: 5
 });
@@ -44,5 +44,19 @@ async function getUser(user_id) {
   }
 }
 
+async function getUserByEmail(email) {
+  let conn;
+  try {
+    conn = await pool.getConnection();
+    const user = await conn.query('SELECT * FROM benutzer WHERE email = ?', [email]);
+    if(user.length === 0) {
+      return null;
+    }
+    return user[0];
+  } finally { 
+    if (conn) conn.release();
+  }
+}
 
-module.exports = { getTickets, createTicket, getUser };
+
+module.exports = { getTickets, createTicket, getUser, getUserByEmail };

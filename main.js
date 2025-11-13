@@ -16,7 +16,7 @@ function createWindow() {
     }
   });
 
-  mainWindow.loadFile(path.join(__dirname, 'src', 'index.html'));
+  mainWindow.loadFile(path.join(__dirname, 'src', 'login.html'));
   // mainWindow.webContents.openDevTools(); // optional
 }
 
