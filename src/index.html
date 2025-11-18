@@ -13,7 +13,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Ticket Manager</title>
-  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
   <header>
@@ -25,6 +25,11 @@
       <h2>Neues Ticket erstellen</h2>
       <input id="title" placeholder="Betreff" />
       <textarea id="description" placeholder="Beschreibung"></textarea>
+      <select id="category" name="Kategorie">
+        <option value=1>Technik</option>
+        <option value=2>Software</option>
+        <option value=3>Allgemein</option>
+      </select>
       <button id="createTicketBtn">Ticket erstellen</button>
       <div id="createResult" class="hint"></div>
     </section>
