@@ -25,6 +25,31 @@
             </div>
             -->
         </form>
-    </div>
+        </div>
 </body>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.querySelector('form');
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('eMail_login').value.trim();
+        const password = document.getElementById('password_login').value;
+        if (!email) {
+            alert('Bitte E-Mail eingeben.');
+            return;
+        }
+        const res = await window.api.getUserByEmail(email);
+        if (res && res.success && res.user) {
+            const user = res.user;
+            if (user.passwort_hash === password) {
+                window.location.href = `index.html?id=${user.benutzer_id}`;
+            } else {
+                alert('Falsches Passwort.');
+            }
+        } else {
+            alert('Benutzer nicht gefunden.');
+        }
+    });
+});
+</script>
 </html>

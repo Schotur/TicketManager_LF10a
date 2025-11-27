@@ -1,31 +1,54 @@
-<!doctype html>
-<html lang="de">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta
-      http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'"
-    />
-    <meta
-      http-equiv="X-Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'"
-    />
-  <meta charset="utf-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Ticket Manager</title>
-  <link rel="stylesheet" href="./style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ticket Detail</title>
 </head>
 <body>
-  <header>
-    <h1>Ticket Manager</h1>
-  </header>
+  <h1>Ticket Detail</h1>
+  <form id="ticketForm">
+    <label for="title">Title:</label>
+    <input type="text" id="title" name="title" value="<title of the selected ticket>">
 
-  <main>
-    <section id="new-ticket">
-      <button id="createTicketBtn">Return</button>
-    </section>
-  </main>
-  
-  <script src="btn.js" > </script>
+    <label for="description">Description:</label>
+    <textarea id="description" name="description"><description of the selected ticket></textarea>
+
+    <label for="category">Category:</label>
+    <input type="text" id="category" name="category" value="<category of the selected ticket>">
+
+    <label for="status">Status:</label>
+    <combobox type="text" id="status" name="status" value="<status of the selected ticket>">
+
+    <button type="submit">Save Changes</button>
+  </form>
+
+  <script>
+    // Get the selected ticket information and populate the form fields
+    const ticket = window.api.getSelectedTicket();
+    document.getElementById('title').value = ticket.title;
+    document.getElementById('description').value = ticket.description;
+    document.getElementById('category').value = ticket.category;
+
+    // Handle form submission
+    document.getElementById('ticketForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const formData = new FormData(event.target);
+      const updatedTicket = {
+        title: formData.get('title'),
+        description: formData.get('description'),
+        category: formData.get('category')
+        // Add more fields as needed
+      };
+
+      // Update the ticket in the database
+      try {
+        await window.api.updateTicket(updatedTicket);
+        // Show success message or perform other actions
+      } catch (error) {
+        // Handle error
+      }
+    });
+  </script>
 </body>
 </html>

@@ -13,6 +13,147 @@ body {
     min-height: 100vh;
 }
 
+/* If the page contains a header (the app's main/index page),
+   use a more standard app layout while preserving the login look. */
+body:has(header) {
+    display: block;
+    justify-content: initial;
+    align-items: initial;
+    background: #f4f6f8;
+    color: #222;
+    min-height: 100vh;
+}
+
+/* Header (index) */
+body:has(header) header {
+    background: #ffffff;
+    color: #222;
+    padding: 16px 24px;
+    box-shadow: 0 2px 6px rgba(16,24,40,0.06);
+}
+
+body:has(header) header h1 {
+    margin: 0;
+    font-size: 1.25rem;
+}
+
+/* Main app container for index page */
+body:has(header) main {
+    max-width: 1100px;
+    margin: 24px auto;
+    display: flex;
+    gap: 24px;
+    padding: 16px;
+}
+
+body:has(header) section {
+    background: #fff;
+    padding: 18px;
+    border-radius: 8px;
+    box-shadow: 0 6px 18px rgba(16,24,40,0.06);
+}
+
+/* Make the new-ticket panel a bit narrower */
+body:has(header) #new-ticket {
+    flex: 0 0 320px;
+}
+
+/* Tickets list wider */
+body:has(header) #tickets-list {
+    flex: 1 1 auto;
+}
+
+body:has(header) #tickets li {
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+}
+
+/* Adjust buttons for the index layout */
+body:has(header) button {
+    width: auto;
+    padding: 0.5rem 1rem;
+}
+
+body:has(header) .hint {
+    margin-top: 8px;
+    color: #1f7a3f;
+}
+
+/* Bottom tickets list specific styles */
+#tickets-list {
+    max-width: 1100px;
+    margin: 12px auto 40px;
+}
+
+#tickets-container {
+    background: transparent;
+    border-radius: 6px;
+}
+
+#tickets {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 12px 0;
+    background: #fff;
+    border: 1px solid #e6e9ee;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+#tickets li {
+    display: block;
+    padding: 12px 16px;
+    border-bottom: 1px solid #f1f3f6;
+}
+
+#tickets li a {
+    color: #153243;
+    text-decoration: none;
+}
+
+#pagination {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    align-items: center;
+}
+
+#pagination button {
+    background: #ffffff;
+    border: 1px solid #d1d7df;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+#pagination button:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+#pageInfo {
+    font-size: 0.95rem;
+    color: #374151;
+}
+
+/* Ticket meta: author and date */
+.ticket-meta {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-top: 6px;
+}
+
+.ticket-author {
+    font-size: 0.9rem;
+    color: #6b7280; /* muted */
+}
+
+.ticket-date {
+    font-size: 0.85rem;
+    color: #9ca3af; /* lighter muted */
+}
+
 header {
     background: #2f3b52;
     color: #fff;

@@ -78,3 +78,14 @@ ipcMain.handle('user:get', async (event, user_id) => {
     return { success: false, error: err.message };
   }
 });
+
+// Benutzer per E-Mail holen
+ipcMain.handle('user:getByEmail', async (event, email) => {
+  try {
+    const user = await db.getUserByEmail(email);
+    return { success: true, user };
+  } catch (err) {
+    console.error('DB getUserByEmail error', err);
+    return { success: false, error: err.message };
+  }
+});

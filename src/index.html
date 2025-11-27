@@ -34,11 +34,25 @@
       <div id="createResult" class="hint"></div>
     </section>
 
-    <section id="tickets-list">
+  </main>
+
+  <!-- Tickets list placed below the main area (bottom of page) -->
+  <section id="tickets-list">
+    <div class="tickets-header">
       <h2>Tickets</h2>
-      <button id="refreshBtn">Aktualisieren</button>
+      <div class="tickets-actions">
+        <button id="refreshBtn">Aktualisieren</button>
+      </div>
+    </div>
+    <div id="tickets-container">
       <ul id="tickets"></ul>
-    </section>
+      <div id="pagination">
+        <button id="prevPage" aria-label="Vorherige Seite">« Zurück</button>
+        <span id="pageInfo">Seite 1 / 1</span>
+        <button id="nextPage" aria-label="Nächste Seite">Weiter »</button>
+      </div>
+    </div>
+  </section>
   </main>
 
   <footer>
