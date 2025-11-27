@@ -20,40 +20,133 @@
     <h1>Ticket Manager</h1>
   </header>
 
-  <main>
-    <section id="new-ticket">
-      <h2>Neues Ticket erstellen</h2>
-      <input id="title" placeholder="Betreff" />
-      <textarea id="description" placeholder="Beschreibung"></textarea>
-      <select id="category" name="Kategorie">
-        <option value=1>Technik</option>
-        <option value=2>Software</option>
-        <option value=3>Allgemein</option>
-      </select>
-      <button id="createTicketBtn">Ticket erstellen</button>
-      <div id="createResult" class="hint"></div>
-    </section>
+  <div class="app-container">
+    <!-- Side Menu -->
+    <aside class="sidemenu">
+      <nav class="sidemenu-nav">
+        <button class="sidemenu-item active" data-action="show-all" title="Zeige alle Tickets">
+          Alle Tickets
+        </button>
+        <button class="sidemenu-item" data-action="create-ticket" title="Erstelle ein neues Ticket">
+          Neues Ticket
+        </button>
+        <button class="sidemenu-item" disabled title="Zukünftige Funktion">
+          Placeholder 1
+        </button>
+        <button class="sidemenu-item" disabled title="Zukünftige Funktion">
+          Placeholder 2
+        </button>
+      </nav>
+    </aside>
 
-  </main>
+    <main>
+      <!-- Main Content Area -->
+      <div id="content-area">
+        <!-- Create Ticket View (hidden by default) -->
+        <section id="new-ticket" class="view hidden">
+          <div class="section-header">
+            <h2>Neues Ticket erstellen</h2>
+            <p class="section-subtitle">Erstelle ein neues Support-Ticket</p>
+          </div>
+          <form class="ticket-creation-form">
+            <div class="form-group">
+              <label for="title">Betreff *</label>
+              <input id="title" type="text" placeholder="Geben Sie den Betreff ein" required />
+            </div>
+            <div class="form-group">
+              <label for="description">Beschreibung *</label>
+              <textarea id="description" placeholder="Beschreiben Sie das Problem oder die Anfrage" rows="6" required></textarea>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="category">Kategorie *</label>
+                <select id="category" name="Kategorie" required>
+                  <option value="">-- Wählen Sie eine Kategorie --</option>
+                  <option value="1">Technik</option>
+                  <option value="2">Software</option>
+                  <option value="3">Allgemein</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-actions">
+              <button id="createTicketBtn" type="submit" class="btn-primary">Ticket erstellen</button>
+            </div>
+            <div id="createResult" class="hint"></div>
+          </form>
+        </section>
 
-  <!-- Tickets list placed below the main area (bottom of page) -->
-  <section id="tickets-list">
-    <div class="tickets-header">
-      <h2>Tickets</h2>
-      <div class="tickets-actions">
-        <button id="refreshBtn">Aktualisieren</button>
+        <!-- Show All Tickets View (visible by default) -->
+        <section id="tickets-list" class="view">
+          <div class="section-header">
+            <h2>Tickets</h2>
+            <p class="section-subtitle" id="ticketCount"></p>
+          </div>
+
+          <!-- Statistics Dashboard -->
+          <div class="stats-dashboard">
+            <div class="stat-card" data-filter="all">
+              <div class="stat-number" id="statTotal">0</div>
+              <div class="stat-label">Gesamt</div>
+            </div>
+            <div class="stat-card stat-offen" data-filter="Offen">
+              <div class="stat-number" id="statOffen">0</div>
+              <div class="stat-label">Offen</div>
+            </div>
+            <div class="stat-card stat-bearbeitung" data-filter="In Bearbeitung">
+              <div class="stat-number" id="statBearbeitung">0</div>
+              <div class="stat-label">In Bearbeitung</div>
+            </div>
+            <div class="stat-card stat-geschlossen" data-filter="Geschlossen">
+              <div class="stat-number" id="statGeschlossen">0</div>
+              <div class="stat-label">Geschlossen</div>
+            </div>
+          </div>
+
+          <div class="tickets-header">
+            <div class="tickets-search">
+              <input type="text" id="searchInput" class="search-box" placeholder="Tickets durchsuchen..." />
+            </div>
+            <div class="tickets-actions">
+              <button id="refreshBtn" class="btn-refresh" title="Tickets aktualisieren">Aktualisieren</button>
+            </div>
+          </div>
+          <div id="tickets-container">
+            <ul id="tickets"></ul>
+            <div id="pagination">
+              <button id="prevPage" aria-label="Vorherige Seite">« Zurück</button>
+              <span id="pageInfo">Seite 1 / 1</span>
+              <button id="nextPage" aria-label="Nächste Seite">Weiter »</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Placeholder Views -->
+        <section id="placeholder-1" class="view hidden">
+          <div class="placeholder-box">
+            <h2>Zukünftige Funktion 1</h2>
+            <p>Diese Seite ist für zukünftige Funktionalität reserviert.</p>
+            <p class="placeholder-icon">🚀</p>
+          </div>
+        </section>
+
+        <section id="placeholder-2" class="view hidden">
+          <div class="placeholder-box">
+            <h2>Zukünftige Funktion 2</h2>
+            <p>Diese Seite ist für zukünftige Funktionalität reserviert.</p>
+            <p class="placeholder-icon">🚀</p>
+          </div>
+        </section>
+
+        <section id="placeholder-3" class="view hidden">
+          <div class="placeholder-box">
+            <h2>Zukünftige Funktion 3</h2>
+            <p>Diese Seite ist für zukünftige Funktionalität reserviert.</p>
+            <p class="placeholder-icon">🚀</p>
+          </div>
+        </section>
       </div>
-    </div>
-    <div id="tickets-container">
-      <ul id="tickets"></ul>
-      <div id="pagination">
-        <button id="prevPage" aria-label="Vorherige Seite">« Zurück</button>
-        <span id="pageInfo">Seite 1 / 1</span>
-        <button id="nextPage" aria-label="Nächste Seite">Weiter »</button>
-      </div>
-    </div>
-  </section>
-  </main>
+    </main>
+  </div>
 
   <footer>
     <small>Electron + MariaDB Demo</small>

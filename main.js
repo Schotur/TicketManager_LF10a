@@ -89,3 +89,28 @@ ipcMain.handle('user:getByEmail', async (event, email) => {
     return { success: false, error: err.message };
   }
 });
+
+// Ticket nach ID holen
+ipcMain.handle('ticket:getById', async (event, ticket_id) => {
+  try {
+    const ticket = await db.getTicket(ticket_id);
+    if (!ticket) {
+      return { success: false, error: 'Ticket nicht gefunden' };
+    }
+    return { success: true, data: ticket };
+  } catch (err) {
+    console.error('DB getTicket error', err);
+    return { success: false, error: err.message };
+  }
+});
+
+// Ticket aktualisieren
+ipcMain.handle('ticket:update', async (event, ticket_id, updatedData) => {
+  try {
+    await db.updateTicket(ticket_id, updatedData);
+    return { success: true };
+  } catch (err) {
+    console.error('DB updateTicket error', err);
+    return { success: false, error: err.message };
+  }
+});

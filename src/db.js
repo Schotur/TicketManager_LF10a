@@ -60,5 +60,29 @@ async function getUserByEmail(email) {
   }
 }
 
+async function getTicket(ticket_id) {
+  let conn;
+  try {
+    conn = await pool.getConnection();
+    const ticket = await conn.query('SELECT * FROM ticket WHERE ticket_id = ?', [ticket_id]);
+    return ticket[0] || null;
+  } finally {
+    if (conn) conn.release();
+  }
+}
 
-module.exports = { getTickets, createTicket, getUser, getUserByEmail };
+async function updateTicket(ticket_id, updatedData) {
+  let conn;
+  try {
+    conn = await pool.getConnection();
+    await conn.query(
+      'UPDATE ticket SET titel = ?, beschreibung = ?, kategorie_id = ?, status = ? WHERE ticket_id = ?',
+      [updatedData.titel, updatedData.beschreibung, updatedData.kategorie, updatedData.status, ticket_id]
+    );
+    return true;
+  } finally {
+    if (conn) conn.release();
+  }
+}
+
+module.exports = { getTickets, getTicket, createTicket, updateTicket, getUser, getUserByEmail };

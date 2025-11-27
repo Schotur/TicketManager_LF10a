@@ -1,54 +1,96 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ticket Detail</title>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'" />
+  <meta http-equiv="X-Content-Security-Policy" content="default-src 'self'; script-src 'self'" />
+  <title>Ticket Details</title>
+  <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
-  <h1>Ticket Detail</h1>
-  <form id="ticketForm">
-    <label for="title">Title:</label>
-    <input type="text" id="title" name="title" value="<title of the selected ticket>">
+  <header>
+    <div class="header-top">
+      <h1>Ticket Manager</h1>
+    </div>
+  </header>
 
-    <label for="description">Description:</label>
-    <textarea id="description" name="description"><description of the selected ticket></textarea>
+  <main class="ticket-detail-main">
+    <div class="ticket-detail-container">
+      <div class="ticket-header">
+        <h2 id="ticketTitle">Ticket Details</h2>
+        <span id="ticketStatus" class="ticket-status-badge"></span>
+      </div>
 
-    <label for="category">Category:</label>
-    <input type="text" id="category" name="category" value="<category of the selected ticket>">
+      <form id="ticketForm" class="ticket-form">
+        <div class="form-section">
+          <h3>Allgemeine Informationen</h3>
+          
+          <div class="form-group">
+            <label for="title">Betreff:</label>
+            <input type="text" id="title" name="title" placeholder="Ticket-Betreff" required>
+          </div>
 
-    <label for="status">Status:</label>
-    <combobox type="text" id="status" name="status" value="<status of the selected ticket>">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="category">Kategorie:</label>
+              <select id="category" name="category" required>
+                <option value="">-- Wählen Sie eine Kategorie --</option>
+                <option value="1">Technik</option>
+                <option value="2">Software</option>
+                <option value="3">Allgemein</option>
+              </select>
+            </div>
 
-    <button type="submit">Save Changes</button>
-  </form>
+            <div class="form-group">
+              <label for="status">Status:</label>
+              <select id="status" name="status" required>
+                <option value="">-- Wählen Sie einen Status --</option>
+                <option value="Offen">Offen</option>
+                <option value="In Bearbeitung">In Bearbeitung</option>
+                <option value="Geschlossen">Geschlossen</option>
+              </select>
+            </div>
+          </div>
+        </div>
 
-  <script>
-    // Get the selected ticket information and populate the form fields
-    const ticket = window.api.getSelectedTicket();
-    document.getElementById('title').value = ticket.title;
-    document.getElementById('description').value = ticket.description;
-    document.getElementById('category').value = ticket.category;
+        <div class="form-section">
+          <h3>Beschreibung</h3>
+          <div class="form-group">
+            <label for="description">Beschreibung:</label>
+            <textarea id="description" name="description" placeholder="Beschreibung des Tickets" rows="8"></textarea>
+          </div>
+        </div>
 
-    // Handle form submission
-    document.getElementById('ticketForm').addEventListener('submit', async (event) => {
-      event.preventDefault();
-      const formData = new FormData(event.target);
-      const updatedTicket = {
-        title: formData.get('title'),
-        description: formData.get('description'),
-        category: formData.get('category')
-        // Add more fields as needed
-      };
+        <div class="form-section">
+          <h3>Metainformationen</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="createdBy">Erstellt von:</label>
+              <input type="text" id="createdBy" name="createdBy" disabled>
+            </div>
 
-      // Update the ticket in the database
-      try {
-        await window.api.updateTicket(updatedTicket);
-        // Show success message or perform other actions
-      } catch (error) {
-        // Handle error
-      }
-    });
-  </script>
+            <div class="form-group">
+              <label for="createdDate">Erstellt am:</label>
+              <input type="text" id="createdDate" name="createdDate" disabled>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn-primary">Änderungen speichern</button>
+          <button type="button" class="btn-secondary">Abbrechen</button>
+        </div>
+      </form>
+
+      <div id="message" class="message hidden"></div>
+    </div>
+  </main>
+
+  <footer>
+    <small>Electron + MariaDB Demo</small>
+  </footer>
+
+  <script src="./ticketdetail.js"></script>
 </body>
 </html>
