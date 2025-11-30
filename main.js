@@ -20,7 +20,8 @@ function createWindow() {
   // mainWindow.webContents.openDevTools(); // optional
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+  await db.autoSetup(); // Datenbank-Setup ausführen
   createWindow();
 
   app.on('activate', function () {

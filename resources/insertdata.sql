@@ -12,9 +12,10 @@ INSERT INTO kategorie (name, beschreibung) VALUES
 
 -- Benutzer
 INSERT INTO benutzer (vorname, nachname, email, passwort_hash, rolle_id, aktiv) VALUES
-('Anna', 'Müller', 'anna.mueller@example.com', 'hash123', 1, TRUE),
-('Bernd', 'Schmidt', 'bernd.schmidt@example.com', 'hash456', 2, TRUE),
-('Clara', 'Meier', 'clara.meier@example.com', 'hash789', 3, TRUE);
+('Admin', 'Administrator', 'admin', 'admin', 1, TRUE),
+('Support', 'Mitarbeiter', 'support', 'support', 2, TRUE),
+('Max', 'Benutzer', 'benutzer', 'benutzer', 3, TRUE),
+('Test', 'Nutzer', 'test@example.com', 'test', 3, TRUE);
 
 -- Tickets
 INSERT INTO ticket (titel, beschreibung, kategorie_id, erstellt_von, zugewiesen_an, erstellt_am, aktualisiert_am, status) VALUES

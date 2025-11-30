@@ -1,14 +1,45 @@
+const fs = require('fs');
+const path = require('path');
 const mariadb = require('mariadb');
 require('dotenv').config();
-// Use connection values from .env (fallback to previous defaults)
+
+let pool = null; // Pool wird später initialisiert
+
+/** Verbindet sich ohne DB, nur für CREATE DATABASE */
+async function connectWithoutDatabase() {
+  return mariadb.createConnection({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD
+  });
+}
+
+/** Initialisiert den Pool, nachdem die DB existiert */
+function initPool() {
+  pool = mariadb.createPool({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,   // ticket_manager
+    port: process.env.DB_PORT ,
+    multipleStatements: true,
+    connectionLimit: 5
+  });
+}
+
+
+// Use connection values from .env (fallback to previous defaults) - alternative Pool setup
+/*
 const pool = mariadb.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
   port: process.env.DB_PORT ,
+  multipleStatements: true,
   connectionLimit: 5
 });
+*/
 
 async function getTickets() {
   let conn;
@@ -85,4 +116,67 @@ async function updateTicket(ticket_id, updatedData) {
   }
 }
 
-module.exports = { getTickets, getTicket, createTicket, updateTicket, getUser, getUserByEmail };
+// Automatisches Setup der Datenbank und Tabellen
+async function autoSetup() {
+  try {
+    console.log("Starte Auto-Setup ...");
+
+    // 1. Datenbank erstellen falls nötig
+    let conn = await connectWithoutDatabase();
+    await conn.query(`CREATE DATABASE IF NOT EXISTS  ${process.env.DB_NAME}`);
+    conn.end();
+
+    console.log(`Datenbank ${process.env.DB_NAME} existiert oder wurde erstellt.`);
+
+    // Initialisiere den Pool jetzt, wo die DB existiert
+    initPool();
+
+    // 3. Tabellen erzeugen (immer sicherheitshalber)
+    await runSqlFile('tablecreater.sql');
+
+    // 4. Prüfen, ob bereits Daten existieren
+    const hasUsers = await tableHasData('users');
+
+    if (!hasUsers) {
+      console.log("Keine Daten gefunden -> füge Testdaten ein ...");
+      await runSqlFile('insertdata.sql');
+    } else {
+      console.log("Daten bereits vorhanden -> überspringe Testdaten");
+    }
+
+    console.log("Auto-Setup abgeschlossen");
+  } catch (err) {
+    console.error("Auto-Setup Fehler:", err);
+  }
+}
+
+// Hilfsfunktion zum Ausführen von SQL-Dateien - für Setup-Skripte
+async function runSqlFile(file) {
+  const conn = await pool.getConnection();
+  try {
+    const filePath = path.join(__dirname, '..', 'resources', file);
+    const sql = fs.readFileSync(filePath, 'utf8');
+    console.log(`Führe SQL Datei aus: ${file}`);
+    await conn.query(sql);
+    console.log(`Erfolgreich ausgeführt: ${file}`);
+  } catch (err) {
+    console.error(`Fehler beim Ausführen von ${file}`, err);
+  } finally {
+    conn.release();
+  }
+}
+
+// Prüft, ob es Daten gibt
+async function tableHasData(table) {
+  const conn = await pool.getConnection();
+  try {
+    const result = await conn.query(`SELECT COUNT(*) AS c FROM ${table};`);
+    return result[0].c > 0;
+  } catch (err) {
+    return false; // Falls Tabelle nicht existiert
+  } finally {
+    conn.release();
+  }
+}
+
+module.exports = { getTickets, getTicket, createTicket, updateTicket, getUser, getUserByEmail, pool, autoSetup };
