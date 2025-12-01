@@ -15,7 +15,7 @@ INSERT INTO benutzer (vorname, nachname, email, passwort_hash, rolle_id, aktiv) 
 ('Admin', 'Administrator', 'admin', 'admin', 1, TRUE),
 ('Support', 'Mitarbeiter', 'support', 'support', 2, TRUE),
 ('Max', 'Benutzer', 'benutzer', 'benutzer', 3, TRUE),
-('Test', 'Nutzer', 'test@example.com', 'test', 3, TRUE);
+('Test', 'Nutzer', 'test@example.com', 'TestPasswort123!', 3, TRUE);
 
 -- Tickets
 INSERT INTO ticket (titel, beschreibung, kategorie_id, erstellt_von, zugewiesen_an, erstellt_am, aktualisiert_am, status) VALUES
