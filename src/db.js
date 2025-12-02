@@ -131,17 +131,24 @@ async function autoSetup() {
     // Initialisiere den Pool jetzt, wo die DB existiert
     initPool();
 
-    // 3. Tabellen erzeugen (immer sicherheitshalber)
-    await runSqlFile('tablecreater.sql');
+    // Prüfen ob Tabellen existierten und Tabellen erzeugen, falls nicht
+    const hasTables = await tableExists('rolle');
+    if(!hasTables){
+      console.log("Keine Tabellen gefunden -> erstelle Tabellen");
+      await runSqlFile('tablecreater.sql');  
+    }else{
+      console.log("Tabellen bereits vorhanden -> ueberspringe erstellen Tabellen")
+    }
+    
 
     // 4. Prüfen, ob bereits Daten existieren
-    const hasUsers = await tableHasData('users');
+    const hasUsers = await tableHasData('benutzer');
 
     if (!hasUsers) {
-      console.log("Keine Daten gefunden -> füge Testdaten ein ...");
+      console.log("Keine Daten gefunden -> fuege Testdaten ein ...");
       await runSqlFile('insertdata.sql');
     } else {
-      console.log("Daten bereits vorhanden -> überspringe Testdaten");
+      console.log("Daten bereits vorhanden -> ueberspringe Testdaten");
     }
 
     console.log("Auto-Setup abgeschlossen");
@@ -156,11 +163,11 @@ async function runSqlFile(file) {
   try {
     const filePath = path.join(__dirname, '..', 'resources', file);
     const sql = fs.readFileSync(filePath, 'utf8');
-    console.log(`Führe SQL Datei aus: ${file}`);
+    console.log(`Fuehre SQL Datei aus: ${file}`);
     await conn.query(sql);
-    console.log(`Erfolgreich ausgeführt: ${file}`);
+    console.log(`Erfolgreich ausgefuehrt: ${file}`);
   } catch (err) {
-    console.error(`Fehler beim Ausführen von ${file}`, err);
+    console.error(`Fehler beim Ausfuehren von ${file}`, err);
   } finally {
     conn.release();
   }
@@ -177,6 +184,27 @@ async function tableHasData(table) {
   } finally {
     conn.release();
   }
+}
+
+// Prüfe ob Tabelle existiert
+async function tableExists(tableName) {
+   const conn = await pool.getConnection();
+
+  const rows = await conn.query(
+    "SELECT COUNT(*) AS c FROM information_schema.tables WHERE table_schema = ? AND table_name = ?",
+    [process.env.DB_NAME, tableName]
+  );
+
+  conn.release();
+  return rows[0].c > 0;  // true = Tabelle existiert
+
+   // Variante 2 mit MariaDB eigenen Funktion SHOW TABLES LIKE
+  /*
+  const conn = await pool.getConnection();
+  const rows = await conn.query(`SHOW TABLES LIKE ?`, [tableName]);
+  conn.release();
+  return rows.length > 0;
+  */
 }
 
 module.exports = { getTickets, getTicket, createTicket, updateTicket, getUser, getUserByEmail, pool, autoSetup };

@@ -935,7 +935,9 @@ body:has(header) .placeholder-box p {
 }
 
 .stat-card:hover .stat-number {
+    /*
     font-size: 2.8rem;
+    */
 }
 
 .stat-card.stat-offen .stat-number {
