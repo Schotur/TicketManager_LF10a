@@ -1,5 +1,20 @@
 // renderer.js
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  let currentUserId = null;
+  let currentUserRole = null;
+
+  // Get user ID from URL
+  const urlParams = new URLSearchParams(window.location.search);
+  currentUserId = urlParams.get('id');
+
+  if (!currentUserId) {
+    window.location.href = 'login.html';
+    return;
+  }
+
+  // Load current user info and set up role-based visibility
+  await loadCurrentUser();
+
   const loginbtn = document.getElementById('loginBtn');
   const ticketsUl = document.getElementById('tickets');
   const refreshBtn = document.getElementById('refreshBtn');
@@ -11,6 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const descInput = document.getElementById('description');
   const cateInput = document.getElementById('category');
   const createResult = document.getElementById('createResult');
+  const logoutBtn = document.getElementById('logoutBtn');
 
   const TICKETS_PER_PAGE = 5;
   let ticketsCache = [];
@@ -18,6 +34,25 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentPage = 1;
   let currentStatusFilter = 'all';
   const userCache = new Map();
+
+  async function loadCurrentUser() {
+    try {
+      const res = await window.api.getUser(currentUserId);
+      if (res && res.success && res.user) {
+        currentUserRole = res.user.rolle_id;
+        const userName = `${res.user.vorname} ${res.user.nachname}`;
+        document.getElementById('userDisplay').textContent = userName;
+        
+        // Show/hide user management based on role (Admin = rolle_id 1)
+        const userManagementBtn = document.getElementById('userManagementBtn');
+        if (userManagementBtn && currentUserRole === 1) {
+          userManagementBtn.style.display = '';
+        }
+      }
+    } catch (error) {
+      console.error('Error loading current user:', error);
+    }
+  }
 
   async function loadTickets() {
     ticketsUl.innerHTML = '<li>Lade...</li>';
@@ -139,7 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (authorName) metaParts.push(`<span class="ticket-author">von ${escapeHtml(authorName)}</span>`);
       metaParts.push(`<span class="ticket-date">${escapeHtml(dateText)}</span>`);
 
-      li.innerHTML = `<a href="ticketdetail.html?id=${t.ticket_id}"><strong>[${escapeHtml(t.status)}] ${escapeHtml(t.titel)}</strong></a><div class="ticket-meta">${metaParts.join('')}</div>`;
+      li.innerHTML = `<a href="ticketdetail.html?id=${t.ticket_id}&uid=${currentUserId}"><strong>[${escapeHtml(t.status)}] ${escapeHtml(t.titel)}</strong></a><div class="ticket-meta">${metaParts.join('')}</div>`;
       ticketsUl.appendChild(li);
     }
 
@@ -220,7 +255,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     createResult.textContent = 'Erstelle...';
     createResult.style.color = '#1e40af';
-    const res = await window.api.createTicket({ title, description, customer_id: 1, category, status: "Offen" });
+    const res = await window.api.createTicket({ title, description, customer_id: currentUserId, category, status: "Offen" });
     if (res.success) {
       createResult.textContent = `Ticket erstellt (ID ${res.id}).`;
       createResult.style.color = '#166534';
@@ -237,23 +272,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  if (loginbtn) {
-    loginbtn.addEventListener('click', async (event) => {
-      event.preventDefault();
-      const email = document.getElementById('eMail_login').value;
-      const password = document.getElementById('password_login').value;
-      const res = await window.api.getUserByEmail(email);
-      if (res && res.success && res.user) {
-        const user = res.user;
-        const stored = user.passwort ?? user.passwort_hash;
-        if (stored === password) {
-          window.location.href = `index.html?id=${user.benutzer_id}`;
-        } else {
-          alert('Falsches Passwort. Bitte versuche es erneut.');
-        }
-      } else {
-        alert('Benutzer nicht gefunden. Bitte überprüfe deine Eingaben.');
-      }
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+      window.location.href = 'login.html';
     });
   }
 
@@ -265,6 +286,14 @@ document.addEventListener('DOMContentLoaded', () => {
     item.addEventListener('click', (e) => {
       if (item.disabled) return;
       
+      const action = item.dataset.action;
+      
+      // Handle navigation
+      if (action === 'user-management') {
+        window.location.href = `usermanagement.html?id=${currentUserId}`;
+        return;
+      }
+      
       // Update active state
       sidemenuItems.forEach((i) => i.classList.remove('active'));
       item.classList.add('active');
@@ -273,7 +302,6 @@ document.addEventListener('DOMContentLoaded', () => {
       viewSections.forEach((view) => view.classList.add('hidden'));
       
       // Show appropriate view
-      const action = item.dataset.action;
       if (action === 'show-all') {
         document.getElementById('tickets-list').classList.remove('hidden');
         loadTickets();

@@ -115,3 +115,58 @@ ipcMain.handle('ticket:update', async (event, ticket_id, updatedData) => {
     return { success: false, error: err.message };
   }
 });
+
+// Alle Benutzer holen
+ipcMain.handle('users:getAll', async () => {
+  try {
+    const rows = await db.getUsers();
+    return { success: true, data: rows };
+  } catch (err) {
+    console.error('DB getUsers error', err);
+    return { success: false, error: err.message };
+  }
+});
+
+// Neuen Benutzer erstellen
+ipcMain.handle('user:create', async (event, userData) => {
+  try {
+    const id = await db.createUser(userData.vorname, userData.nachname, userData.email, userData.passwort_hash, userData.rolle_id);
+    return { success: true, id };
+  } catch (err) {
+    console.error('DB createUser error', err);
+    return { success: false, error: err.message };
+  }
+});
+
+// Benutzer aktualisieren
+ipcMain.handle('user:update', async (event, user_id, userData) => {
+  try {
+    await db.updateUser(user_id, userData.vorname, userData.nachname, userData.email, userData.passwort_hash, userData.rolle_id, userData.aktiv);
+    return { success: true };
+  } catch (err) {
+    console.error('DB updateUser error', err);
+    return { success: false, error: err.message };
+  }
+});
+
+// Benutzer löschen
+ipcMain.handle('user:delete', async (event, user_id) => {
+  try {
+    await db.deleteUser(user_id);
+    return { success: true };
+  } catch (err) {
+    console.error('DB deleteUser error', err);
+    return { success: false, error: err.message };
+  }
+});
+
+// Rollen holen
+ipcMain.handle('roles:getAll', async () => {
+  try {
+    const rows = await db.getRoles();
+    return { success: true, data: rows };
+  } catch (err) {
+    console.error('DB getRoles error', err);
+    return { success: false, error: err.message };
+  }
+});

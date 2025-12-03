@@ -116,6 +116,67 @@ async function updateTicket(ticket_id, updatedData) {
   }
 }
 
+async function getUsers() {
+  let conn;
+  try {
+    conn = await pool.getConnection();
+    const rows = await conn.query('SELECT b.*, r.name as rolle_name FROM benutzer b JOIN rolle r ON b.rolle_id = r.rolle_id');
+    return rows;
+  } finally {
+    if (conn) conn.release();
+  }
+}
+
+async function createUser(vorname, nachname, email, passwort_hash, rolle_id) {
+  let conn;
+  try {
+    conn = await pool.getConnection();
+    const result = await conn.query(
+      'INSERT INTO benutzer (vorname, nachname, email, passwort_hash, rolle_id, aktiv) VALUES (?, ?, ?, ?, ?, ?)',
+      [vorname, nachname, email, passwort_hash, rolle_id, true]
+    );
+    return result.insertId;
+  } finally {
+    if (conn) conn.release();
+  }
+}
+
+async function updateUser(user_id, vorname, nachname, email, passwort_hash, rolle_id, aktiv) {
+  let conn;
+  try {
+    conn = await pool.getConnection();
+    await conn.query(
+      'UPDATE benutzer SET vorname = ?, nachname = ?, email = ?, passwort_hash = ?, rolle_id = ?, aktiv = ? WHERE benutzer_id = ?',
+      [vorname, nachname, email, passwort_hash, rolle_id, aktiv, user_id]
+    );
+    return true;
+  } finally {
+    if (conn) conn.release();
+  }
+}
+
+async function deleteUser(user_id) {
+  let conn;
+  try {
+    conn = await pool.getConnection();
+    await conn.query('DELETE FROM benutzer WHERE benutzer_id = ?', [user_id]);
+    return true;
+  } finally {
+    if (conn) conn.release();
+  }
+}
+
+async function getRoles() {
+  let conn;
+  try {
+    conn = await pool.getConnection();
+    const rows = await conn.query('SELECT * FROM rolle');
+    return rows;
+  } finally {
+    if (conn) conn.release();
+  }
+}
+
 // Automatisches Setup der Datenbank und Tabellen
 async function autoSetup() {
   try {
@@ -207,4 +268,4 @@ async function tableExists(tableName) {
   */
 }
 
-module.exports = { getTickets, getTicket, createTicket, updateTicket, getUser, getUserByEmail, pool, autoSetup };
+module.exports = { getTickets, getTicket, createTicket, updateTicket, getUser, getUserByEmail, getUsers, createUser, updateUser, deleteUser, getRoles, pool, autoSetup };

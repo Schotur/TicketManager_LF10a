@@ -3,14 +3,21 @@ document.addEventListener('DOMContentLoaded', async () => {
   const form = document.getElementById('ticketForm');
   const messageDiv = document.getElementById('message');
   const cancelBtn = document.querySelector('.btn-secondary');
+  const logoutBtn = document.getElementById('logoutBtn');
   
   // Get ticket ID from URL
   const urlParams = new URLSearchParams(window.location.search);
   const ticketId = urlParams.get('id');
+  const userId = urlParams.get('uid');
 
   if (!ticketId) {
     showMessage('❌ Fehler: Ticket-ID nicht gefunden.', 'error');
     return;
+  }
+
+  // Load current user info
+  if (userId) {
+    await loadCurrentUser(userId);
   }
 
   // Load ticket data
@@ -19,16 +26,38 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Handle form submission
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
-    await updateTicket(ticketId);
+    await updateTicket(ticketId, userId);
   });
 
   // Handle cancel button - navigate back to index.html
   if (cancelBtn) {
     cancelBtn.addEventListener('click', () => {
-      window.location.href = 'index.html';
+      window.location.href = userId ? `index.html?id=${userId}` : 'index.html';
+    });
+  }
+
+  // Handle logout
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+      window.location.href = 'login.html';
     });
   }
 });
+
+async function loadCurrentUser(userId) {
+  try {
+    const res = await window.api.getUser(userId);
+    if (res && res.success && res.user) {
+      const userName = `${res.user.vorname} ${res.user.nachname}`;
+      const userDisplay = document.getElementById('userDisplay');
+      if (userDisplay) {
+        userDisplay.textContent = userName;
+      }
+    }
+  } catch (error) {
+    console.error('Error loading current user:', error);
+  }
+}
 
 async function loadTicket(ticketId) {
   try {
@@ -51,13 +80,13 @@ async function loadTicket(ticketId) {
     // Populate form fields
     document.getElementById('title').value = ticket.titel || '';
     document.getElementById('description').value = ticket.beschreibung || '';
-    document.getElementById('category').value = ticket.kategorie || '';
+    document.getElementById('category').value = ticket.kategorie_id || '';
     document.getElementById('status').value = ticket.status || '';
     
     // Set read-only fields
     if (ticket.erstellt_von) {
       const userRes = await window.api.getUser(ticket.erstellt_von);
-      if (userRes && userRes.user) {
+      if (userRes && userRes.success && userRes.user) {
         const user = userRes.user;
         document.getElementById('createdBy').value = `${user.vorname} ${user.nachname}`;
       }
@@ -90,7 +119,7 @@ async function loadTicket(ticketId) {
   }
 }
 
-async function updateTicket(ticketId) {
+async function updateTicket(ticketId, userId) {
   try {
     showMessage('💾 Speichere Änderungen...', 'loading');
 
@@ -108,7 +137,7 @@ async function updateTicket(ticketId) {
       showMessage('✅ Ticket erfolgreich aktualisiert.', 'success');
       // Redirect to index.html after successful update
       setTimeout(() => {
-        window.location.href = 'index.html';
+        window.location.href = userId ? `index.html?id=${userId}` : 'index.html';
       }, 1000);
     } else {
       showMessage(`❌ Fehler: ${res.error}`, 'error');
@@ -135,6 +164,9 @@ function updateStatusBadge(status) {
 
 function showMessage(message, type) {
   const messageDiv = document.getElementById('message');
-  messageDiv.textContent = message;
-  messageDiv.className = `message ${type}`;
+  if (messageDiv) {
+    messageDiv.textContent = message;
+    messageDiv.className = `message ${type}`;
+    messageDiv.classList.remove('hidden');
+  }
 }

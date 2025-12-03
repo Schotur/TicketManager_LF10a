@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Benutzerverwaltung</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <header>
+    <h1>Ticket Manager</h1>
+    <div class="header-right">
+      <span id="userDisplay"></span>
+      <button id="logoutBtn" class="btn-logout">Logout</button>
+    </div>
+  </header>
+
+  <div class="app-container">
+    <!-- Side Menu -->
+    <aside class="sidemenu">
+      <nav class="sidemenu-nav">
+        <button class="sidemenu-item" data-action="show-all" title="Zeige alle Tickets">
+          Alle Tickets
+        </button>
+        <button class="sidemenu-item" data-action="create-ticket" title="Erstelle ein neues Ticket">
+          Neues Ticket
+        </button>
+        <button class="sidemenu-item active" data-action="user-management" title="Verwalte Benutzer">
+          Benutzerverwaltung
+        </button>
+        <button class="sidemenu-item" disabled title="Zukünftige Funktion">
+          Placeholder
+        </button>
+      </nav>
+    </aside>
+
+    <main>
+      <!-- Main Content Area -->
+      <div id="content-area">
+        <!-- Users List View -->
+        <section id="users-list" class="view">
+          <div class="section-header">
+            <h2>Benutzerverwaltung</h2>
+            <p class="section-subtitle" id="userCount"></p>
+          </div>
+
+          <div class="users-header">
+            <button id="addUserBtn" class="btn-primary">+ Neuer Benutzer</button>
+            <button id="deleteSelectedBtn" class="btn-danger" disabled>🗑️ Ausgewählte löschen</button>
+          </div>
+
+          <div id="users-container">
+            <table id="users-table" class="users-table">
+              <thead>
+                <tr>
+                  <th><input type="checkbox" id="selectAllCheckbox"></th>
+                  <th>Name</th>
+                  <th>E-Mail</th>
+                  <th>Rolle</th>
+                  <th>Status</th>
+                  <th>Aktionen</th>
+                </tr>
+              </thead>
+              <tbody id="users-tbody">
+              </tbody>
+            </table>
+          </div>
+
+          <div id="usersListMessage" class="message"></div>
+        </section>
+
+        <!-- User Detail View -->
+        <section id="user-detail" class="view hidden">
+          <div class="section-header">
+            <h2 id="userDetailTitle">Benutzer bearbeiten</h2>
+            <button class="back-link" id="backToListBtn">← Zurück zur Liste</button>
+          </div>
+
+          <form id="userDetailForm" class="user-detail-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="userFirstname">Vorname *</label>
+                <input type="text" id="userFirstname" name="vorname" required>
+              </div>
+              <div class="form-group">
+                <label for="userLastname">Nachname *</label>
+                <input type="text" id="userLastname" name="nachname" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="userEmail">E-Mail *</label>
+              <input type="email" id="userEmail" name="email" required>
+            </div>
+
+            <div class="form-group">
+              <label for="userPassword">Passwort *</label>
+              <input type="text" id="userPassword" name="password" required>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="userRole">Rolle *</label>
+                <select id="userRole" name="rolle_id" required>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="userActive">Status</label>
+                <input type="checkbox" id="userActive" name="aktiv" checked>
+                <span>Aktiv</span>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="btn-primary">Speichern</button>
+              <button type="button" class="btn-secondary" id="cancelEditBtn">Abbrechen</button>
+            </div>
+
+            <div id="userDetailMessage" class="message"></div>
+          </form>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="./usermanagement.js"></script>
+</body>
+</html>

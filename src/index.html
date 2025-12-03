@@ -18,6 +18,10 @@
 <body>
   <header>
     <h1>Ticket Manager</h1>
+    <div class="header-right">
+      <span id="userDisplay"></span>
+      <button id="logoutBtn" class="btn-logout">Logout</button>
+    </div>
   </header>
 
   <div class="app-container">
@@ -30,11 +34,11 @@
         <button class="sidemenu-item" data-action="create-ticket" title="Erstelle ein neues Ticket">
           Neues Ticket
         </button>
-        <button class="sidemenu-item" disabled title="Zukünftige Funktion">
-          Placeholder 1
+        <button class="sidemenu-item" data-action="user-management" title="Verwalte Benutzer" id="userManagementBtn" style="display: none;">
+          Benutzerverwaltung
         </button>
         <button class="sidemenu-item" disabled title="Zukünftige Funktion">
-          Placeholder 2
+          Placeholder
         </button>
       </nav>
     </aside>
