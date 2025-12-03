@@ -613,6 +613,12 @@ body:has(header) .ticket-detail-main {
     border: 1px solid #93c5fd;
 }
 
+.message.info {
+    background: #e0f2fe;
+    color: #0c4a6e;
+    border: 1px solid #7dd3fc;
+}
+
 /* ========== MAGIC ANIMATIONS & IMPROVEMENTS ========== */
 
 /* Animations */

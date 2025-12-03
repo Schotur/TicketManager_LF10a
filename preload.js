@@ -2,6 +2,8 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('api', {
   getTickets: async () => ipcRenderer.invoke('tickets:getAll'),
+  getAssignedTickets: async (user_id) => ipcRenderer.invoke('tickets:getAssigned', user_id),
+  getTicketsByCreator: async (user_id) => ipcRenderer.invoke('tickets:getByCreator', user_id),
   getTicketById: async (ticket_id) => ipcRenderer.invoke('ticket:getById', ticket_id),
   createTicket: async (ticket) => ipcRenderer.invoke('tickets:create', ticket),
   updateTicket: async (ticket_id, updatedData) => ipcRenderer.invoke('ticket:update', ticket_id, updatedData),
@@ -14,3 +16,4 @@ contextBridge.exposeInMainWorld('api', {
   deleteUser: async (user_id) => ipcRenderer.invoke('user:delete', user_id),
   getRoles: async () => ipcRenderer.invoke('roles:getAll')
 });
+

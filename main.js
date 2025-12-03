@@ -47,10 +47,32 @@ ipcMain.handle('tickets:getAll', async () => {
   }
 });
 
+// Zugewiesene Tickets für einen Benutzer holen (Admin/Support)
+ipcMain.handle('tickets:getAssigned', async (event, user_id) => {
+  try {
+    const rows = await db.getAssignedTickets(user_id);
+    return { success: true, data: rows };
+  } catch (err) {
+    console.error('DB getAssignedTickets error', err);
+    return { success: false, error: err.message };
+  }
+});
+
+// Von einem Benutzer erstellte Tickets holen (normale Benutzer)
+ipcMain.handle('tickets:getByCreator', async (event, user_id) => {
+  try {
+    const rows = await db.getTicketsByCreator(user_id);
+    return { success: true, data: rows };
+  } catch (err) {
+    console.error('DB getTicketsByCreator error', err);
+    return { success: false, error: err.message };
+  }
+});
+
 // Neues Ticket erstellen
 ipcMain.handle('tickets:create', async (event, ticket) => {
   try {
-    const id = await db.createTicket(ticket.title, ticket.description, ticket.customer_id, ticket.category, ticket.status);
+    const id = await db.createTicket(ticket.title, ticket.description, ticket.customer_id, ticket.category, ticket.status, ticket.assigned_to);
     return { success: true, id };
   } catch (err) {
     console.error('DB createTicket error', err);

@@ -12,10 +12,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
-  // Load current user info and set up role-based visibility
-  await loadCurrentUser();
-
-  const loginbtn = document.getElementById('loginBtn');
   const ticketsUl = document.getElementById('tickets');
   const refreshBtn = document.getElementById('refreshBtn');
   const prevBtn = document.getElementById('prevPage');
@@ -25,6 +21,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   const titleInput = document.getElementById('title');
   const descInput = document.getElementById('description');
   const cateInput = document.getElementById('category');
+  const assigneeInput = document.getElementById('assignee');
+  const assigneeRow = document.getElementById('assigneeRow');
   const createResult = document.getElementById('createResult');
   const logoutBtn = document.getElementById('logoutBtn');
 
@@ -34,6 +32,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   let currentPage = 1;
   let currentStatusFilter = 'all';
   const userCache = new Map();
+  let allUsers = [];
+
+  // Rollen: Admin=1, Support=2, Benutzer=3
+  const ROLE_ADMIN = 1;
+  const ROLE_SUPPORT = 2;
+  const ROLE_USER = 3;
+
+  // Load current user info and set up role-based visibility
+  await loadCurrentUser();
 
   async function loadCurrentUser() {
     try {
@@ -43,20 +50,100 @@ document.addEventListener('DOMContentLoaded', async () => {
         const userName = `${res.user.vorname} ${res.user.nachname}`;
         document.getElementById('userDisplay').textContent = userName;
         
-        // Show/hide user management based on role (Admin = rolle_id 1)
-        const userManagementBtn = document.getElementById('userManagementBtn');
-        if (userManagementBtn && currentUserRole === 1) {
-          userManagementBtn.style.display = '';
-        }
+        // Load users for assignee dropdown
+        await loadAllUsers();
+        
+        // Setup role-based menu - must be AFTER DOM is ready
+        setTimeout(() => setupRoleBasedMenu(), 0);
       }
     } catch (error) {
       console.error('Error loading current user:', error);
     }
   }
 
+  function setupRoleBasedMenu() {
+    const sidemenuItems = document.querySelectorAll('.sidemenu-item');
+    
+    sidemenuItems.forEach(item => {
+      const action = item.dataset.action;
+      
+      // "Alle Tickets" - nur für Admin und Support
+      if (action === 'show-all') {
+        if (currentUserRole === ROLE_USER) {
+          item.style.display = 'none';
+        } else {
+          item.style.display = '';
+        }
+      }
+      
+      // "Benutzerverwaltung" - nur für Admin
+      if (action === 'user-management') {
+        if (currentUserRole === ROLE_ADMIN) {
+          item.style.display = '';
+        } else {
+          item.style.display = 'none';
+        }
+      }
+      
+      // "Startseite" - für alle sichtbar
+      if (action === 'home') {
+        item.style.display = '';
+      }
+    });
+  }
+
+  async function loadAllUsers() {
+    try {
+      const res = await window.api.getUsers();
+      if (res && res.success && res.data) {
+        allUsers = res.data;
+        
+        // Show/hide assignee dropdown based on role
+        if (currentUserRole === ROLE_ADMIN || currentUserRole === ROLE_SUPPORT) {
+          assigneeRow.style.display = '';
+          populateAssigneeDropdown();
+        } else {
+          // Hide for normal users
+          assigneeRow.style.display = 'none';
+        }
+      }
+    } catch (error) {
+      console.error('Error loading users:', error);
+    }
+  }
+
+  function populateAssigneeDropdown() {
+    // Only show Admin and Support users
+    const supportUsers = allUsers.filter(u => u.rolle_id === ROLE_ADMIN || u.rolle_id === ROLE_SUPPORT);
+    
+    // Clear existing options except the first one
+    while (assigneeInput.options.length > 1) {
+      assigneeInput.remove(1);
+    }
+    
+    supportUsers.forEach(user => {
+      const option = document.createElement('option');
+      option.value = user.benutzer_id;
+      option.textContent = `${user.vorname} ${user.nachname}`;
+      assigneeInput.appendChild(option);
+    });
+  }
+
   async function loadTickets() {
     ticketsUl.innerHTML = '<li>Lade...</li>';
-    const res = await window.api.getTickets();
+    let res;
+    
+    // Load tickets based on role
+    if (currentUserRole === ROLE_ADMIN || currentUserRole === ROLE_SUPPORT) {
+      // Admin and Support see assigned tickets on home
+      res = await window.api.getAssignedTickets(currentUserId);
+    } else if (currentUserRole === ROLE_USER) {
+      // Users see their created tickets
+      res = await window.api.getTicketsByCreator(currentUserId);
+    } else {
+      res = await window.api.getTickets(); // Fallback
+    }
+    
     if (!res.success) {
       ticketsUl.innerHTML = `<li class="error">Fehler: ${res.error}</li>`;
       return;
@@ -71,6 +158,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     currentPage = 1;
     renderPage(currentPage);
+  }
+
+  function updateHomeSubtitle() {
+    const subtitle = document.getElementById('homeSubtitle');
+    if (currentUserRole === ROLE_ADMIN || currentUserRole === ROLE_SUPPORT) {
+      subtitle.textContent = 'Ihnen zugewiesene Tickets';
+    } else if (currentUserRole === ROLE_USER) {
+      subtitle.textContent = 'Von Ihnen erstellte Tickets';
+    } else {
+      subtitle.textContent = 'Ihre Tickets';
+    }
   }
 
   function applyFilter(filterStatus) {
@@ -97,10 +195,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function updateTicketCount() {
-    const countEl = document.getElementById('ticketCount');
-    if (countEl) {
-      countEl.textContent = `${filteredTickets.length} Ticket${filteredTickets.length !== 1 ? 's' : ''}`;
-    }
+    // This is just stats, not a subtitle anymore
     updateStatistics();
   }
 
@@ -238,6 +333,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const title = titleInput.value.trim();
     const description = descInput.value.trim();
     const category = cateInput.value;
+    // Only allow assignee for Admin and Support
+    const assigneeId = (currentUserRole === ROLE_ADMIN || currentUserRole === ROLE_SUPPORT) 
+      ? (assigneeInput.value || null) 
+      : null;
+    
     if (!title) {
       createResult.textContent = 'Bitte Betreff eingeben.';
       createResult.style.color = '#dc2626';
@@ -253,18 +353,29 @@ document.addEventListener('DOMContentLoaded', async () => {
       createResult.style.color = '#dc2626';
       return;
     }
+    
     createResult.textContent = 'Erstelle...';
     createResult.style.color = '#1e40af';
-    const res = await window.api.createTicket({ title, description, customer_id: currentUserId, category, status: "Offen" });
+    const res = await window.api.createTicket({ 
+      title, 
+      description, 
+      customer_id: currentUserId, 
+      category, 
+      status: "Offen",
+      assigned_to: assigneeId
+    });
     if (res.success) {
       createResult.textContent = `Ticket erstellt (ID ${res.id}).`;
       createResult.style.color = '#166534';
       titleInput.value = '';
       descInput.value = '';
       cateInput.value = '';
+      assigneeInput.value = '';
       setTimeout(() => {
         loadTickets();
-        sidemenuItems[0].click(); // Switch to tickets view
+        // Go back to home view
+        const homeBtn = document.querySelector('[data-action="home"]');
+        if (homeBtn) homeBtn.click();
       }, 1000);
     } else {
       createResult.textContent = `Fehler: ${res.error}`;
@@ -285,6 +396,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   sidemenuItems.forEach((item) => {
     item.addEventListener('click', (e) => {
       if (item.disabled) return;
+      if (item.style.display === 'none') return; // Skip hidden items
       
       const action = item.dataset.action;
       
@@ -302,8 +414,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       viewSections.forEach((view) => view.classList.add('hidden'));
       
       // Show appropriate view
-      if (action === 'show-all') {
-        document.getElementById('tickets-list').classList.remove('hidden');
+      if (action === 'home') {
+        document.getElementById('home').classList.remove('hidden');
+        updateHomeSubtitle();
+        loadTickets();
+      } else if (action === 'show-all') {
+        document.getElementById('home').classList.remove('hidden');
+        updateHomeSubtitle();
         loadTickets();
       } else if (action === 'create-ticket') {
         document.getElementById('new-ticket').classList.remove('hidden');
@@ -312,5 +429,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // initial load
-  loadTickets();
+  setTimeout(() => {
+    updateHomeSubtitle();
+    loadTickets();
+    // Activate home button
+    const homeBtn = document.querySelector('[data-action="home"]');
+    if (homeBtn) homeBtn.click();
+  }, 100);
 });

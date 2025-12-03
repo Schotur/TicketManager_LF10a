@@ -42,9 +42,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (action === 'user-management') {
         // Already on user management
         return;
-      } else if (action === 'show-all') {
-        window.location.href = `index.html?id=${currentUserId}`;
-      } else if (action === 'create-ticket') {
+      } else if (action === 'home' || action === 'show-all' || action === 'create-ticket') {
         window.location.href = `index.html?id=${currentUserId}`;
       }
     });

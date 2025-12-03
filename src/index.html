@@ -28,17 +28,17 @@
     <!-- Side Menu -->
     <aside class="sidemenu">
       <nav class="sidemenu-nav">
-        <button class="sidemenu-item active" data-action="show-all" title="Zeige alle Tickets">
+        <button class="sidemenu-item active" data-action="home" title="Zur Startseite">
+          Startseite
+        </button>
+        <button class="sidemenu-item" data-action="show-all" title="Zeige alle Tickets">
           Alle Tickets
         </button>
         <button class="sidemenu-item" data-action="create-ticket" title="Erstelle ein neues Ticket">
           Neues Ticket
         </button>
-        <button class="sidemenu-item" data-action="user-management" title="Verwalte Benutzer" id="userManagementBtn" style="display: none;">
+        <button class="sidemenu-item" data-action="user-management" title="Verwalte Benutzer">
           Benutzerverwaltung
-        </button>
-        <button class="sidemenu-item" disabled title="Zukünftige Funktion">
-          Placeholder
         </button>
       </nav>
     </aside>
@@ -46,44 +46,11 @@
     <main>
       <!-- Main Content Area -->
       <div id="content-area">
-        <!-- Create Ticket View (hidden by default) -->
-        <section id="new-ticket" class="view hidden">
+        <!-- Home View (visible by default) -->
+        <section id="home" class="view">
           <div class="section-header">
-            <h2>Neues Ticket erstellen</h2>
-            <p class="section-subtitle">Erstelle ein neues Support-Ticket</p>
-          </div>
-          <form class="ticket-creation-form">
-            <div class="form-group">
-              <label for="title">Betreff *</label>
-              <input id="title" type="text" placeholder="Geben Sie den Betreff ein" required />
-            </div>
-            <div class="form-group">
-              <label for="description">Beschreibung *</label>
-              <textarea id="description" placeholder="Beschreiben Sie das Problem oder die Anfrage" rows="6" required></textarea>
-            </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label for="category">Kategorie *</label>
-                <select id="category" name="Kategorie" required>
-                  <option value="">-- Wählen Sie eine Kategorie --</option>
-                  <option value="1">Technik</option>
-                  <option value="2">Software</option>
-                  <option value="3">Allgemein</option>
-                </select>
-              </div>
-            </div>
-            <div class="form-actions">
-              <button id="createTicketBtn" type="submit" class="btn-primary">Ticket erstellen</button>
-            </div>
-            <div id="createResult" class="hint"></div>
-          </form>
-        </section>
-
-        <!-- Show All Tickets View (visible by default) -->
-        <section id="tickets-list" class="view">
-          <div class="section-header">
-            <h2>Tickets</h2>
-            <p class="section-subtitle" id="ticketCount"></p>
+            <h2>Startseite</h2>
+            <p class="section-subtitle" id="homeSubtitle"></p>
           </div>
 
           <!-- Statistics Dashboard -->
@@ -122,6 +89,47 @@
               <button id="nextPage" aria-label="Nächste Seite">Weiter »</button>
             </div>
           </div>
+        </section>
+
+        <!-- Create Ticket View (hidden by default) -->
+        <section id="new-ticket" class="view hidden">
+          <div class="section-header">
+            <h2>Neues Ticket erstellen</h2>
+            <p class="section-subtitle">Erstelle ein neues Support-Ticket</p>
+          </div>
+          <form class="ticket-creation-form">
+            <div class="form-group">
+              <label for="title">Betreff *</label>
+              <input id="title" type="text" placeholder="Geben Sie den Betreff ein" required />
+            </div>
+            <div class="form-group">
+              <label for="description">Beschreibung *</label>
+              <textarea id="description" placeholder="Beschreiben Sie das Problem oder die Anfrage" rows="6" required></textarea>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="category">Kategorie *</label>
+                <select id="category" name="Kategorie" required>
+                  <option value="">-- Wählen Sie eine Kategorie --</option>
+                  <option value="1">Technik</option>
+                  <option value="2">Software</option>
+                  <option value="3">Allgemein</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row" id="assigneeRow" style="display: none;">
+              <div class="form-group">
+                <label for="assignee">Ticket zuweisen an *</label>
+                <select id="assignee" name="assignee">
+                  <option value="">-- Nicht zuweisen --</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-actions">
+              <button id="createTicketBtn" type="submit" class="btn-primary">Ticket erstellen</button>
+            </div>
+            <div id="createResult" class="hint"></div>
+          </form>
         </section>
 
         <!-- Placeholder Views -->

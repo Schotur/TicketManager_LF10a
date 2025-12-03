@@ -52,14 +52,44 @@ async function getTickets() {
   }
 }
 
+// Get tickets assigned to a user (for Admin and Support)
+async function getAssignedTickets(user_id) {
+  let conn;
+  try {
+    conn = await pool.getConnection();
+    const rows = await conn.query(
+      "SELECT * FROM ticket WHERE zugewiesen_an = ?",
+      [user_id]
+    );
+    return rows;
+  } finally {
+    if (conn) conn.release();
+  }
+}
 
-async function createTicket(title, description, customer_id, category, status) {
+// Get tickets created by a user (for normal users)
+async function getTicketsByCreator(user_id) {
+  let conn;
+  try {
+    conn = await pool.getConnection();
+    const rows = await conn.query(
+      "SELECT * FROM ticket WHERE erstellt_von = ?",
+      [user_id]
+    );
+    return rows;
+  } finally {
+    if (conn) conn.release();
+  }
+}
+
+
+async function createTicket(title, description, customer_id, category, status, assigned_to = null) {
   let conn;
   try {
     conn = await pool.getConnection();
     await conn.query(
-      'INSERT INTO ticket (titel, beschreibung, kategorie_id, erstellt_von, erstellt_am, status) VALUES (?, ?, ?, ?, ?, ?)',
-      [title, description, category, customer_id, new Date(), status]
+      'INSERT INTO ticket (titel, beschreibung, kategorie_id, erstellt_von, zugewiesen_an, erstellt_am, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [title, description, category, customer_id, assigned_to, new Date(), status]
     );
   } finally {
     if (conn) conn.release();
@@ -268,4 +298,4 @@ async function tableExists(tableName) {
   */
 }
 
-module.exports = { getTickets, getTicket, createTicket, updateTicket, getUser, getUserByEmail, getUsers, createUser, updateUser, deleteUser, getRoles, pool, autoSetup };
+module.exports = { getTickets, getAssignedTickets, getTicketsByCreator, getTicket, createTicket, updateTicket, getUser, getUserByEmail, getUsers, createUser, updateUser, deleteUser, getRoles, pool, autoSetup };

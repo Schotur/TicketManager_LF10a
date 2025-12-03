@@ -19,9 +19,9 @@ INSERT INTO benutzer (vorname, nachname, email, passwort_hash, rolle_id, aktiv) 
 
 -- Tickets
 INSERT INTO ticket (titel, beschreibung, kategorie_id, erstellt_von, zugewiesen_an, erstellt_am, aktualisiert_am, status) VALUES
-('Laptop startet nicht', 'Mein Laptop zeigt nur einen schwarzen Bildschirm.', 1, 3, 2, NOW(), NOW(), 'Offen'),
+('Laptop startet nicht', 'Mein Laptop zeigt nur einen schwarzen Bildschirm.', 1, 3, 1, NOW(), NOW(), 'Offen'),
 ('Softwareinstallation', 'Ich benötige Hilfe bei der Installation von MS Office.', 2, 3, 2, NOW(), NOW(), 'In Bearbeitung'),
-('Passwort vergessen', 'Ich habe mein Passwort vergessen und kann mich nicht anmelden.', 3, 3, 2, NOW(), NOW(), 'Gelöst');
+('Passwort vergessen', 'Ich habe mein Passwort vergessen und kann mich nicht anmelden.', 3, 3, 1, NOW(), NOW(), 'Offen');
 
 -- Kommentare
 INSERT INTO kommentar (ticket_id, benutzer_id, inhalt, erstellt_am) VALUES
