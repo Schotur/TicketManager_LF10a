@@ -33,6 +33,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   let currentStatusFilter = 'all';
   const userCache = new Map();
   let allUsers = [];
+  let isLoadingTickets = false; // Lock für Mehrfach-Loads
 
   // Rollen: Admin=1, Support=2, Benutzer=3
   const ROLE_ADMIN = 1;
@@ -130,34 +131,45 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   async function loadTickets() {
-    ticketsUl.innerHTML = '<li>Lade...</li>';
-    let res;
-    
-    // Load tickets based on role
-    if (currentUserRole === ROLE_ADMIN || currentUserRole === ROLE_SUPPORT) {
-      // Admin and Support see assigned tickets on home
-      res = await window.api.getAssignedTickets(currentUserId);
-    } else if (currentUserRole === ROLE_USER) {
-      // Users see their created tickets
-      res = await window.api.getTicketsByCreator(currentUserId);
-    } else {
-      res = await window.api.getTickets(); // Fallback
-    }
-    
-    if (!res.success) {
-      ticketsUl.innerHTML = `<li class="error">Fehler: ${res.error}</li>`;
+    if (isLoadingTickets) {
       return;
     }
-    ticketsCache = res.data || [];
-    applyFilter(currentStatusFilter);
     
-    if (ticketsCache.length === 0) {
-      ticketsUl.innerHTML = '<li>Keine Tickets gefunden.</li>';
-      updatePagination();
-      return;
+    isLoadingTickets = true;
+    
+    try {
+      ticketsUl.innerHTML = '<li>Lade...</li>';
+      let res;
+      
+      // Load tickets for home page using the new function
+      res = await window.api.getHomeTickets(currentUserId, currentUserRole);
+      
+      if (!res.success) {
+        ticketsUl.innerHTML = `<li class="error">Fehler: ${res.error}</li>`;
+        return;
+      }
+      ticketsCache = res.data || [];
+      
+      if (ticketsCache.length === 0) {
+        ticketsUl.innerHTML = '<li>Keine Tickets gefunden.</li>';
+        updatePagination();
+        updateStatistics();
+        return;
+      }
+      
+      // Apply current filter and render
+      if (currentStatusFilter === 'all') {
+        filteredTickets = ticketsCache;
+      } else {
+        filteredTickets = ticketsCache.filter(t => t.status === currentStatusFilter);
+      }
+      
+      updateStatistics();
+      currentPage = 1;
+      renderPage(currentPage);
+    } finally {
+      isLoadingTickets = false;
     }
-    currentPage = 1;
-    renderPage(currentPage);
   }
 
   function updateHomeSubtitle() {
@@ -434,6 +446,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     loadTickets();
     // Activate home button
     const homeBtn = document.querySelector('[data-action="home"]');
-    if (homeBtn) homeBtn.click();
+    if (homeBtn) homeBtn.classList.add('active');
   }, 100);
 });

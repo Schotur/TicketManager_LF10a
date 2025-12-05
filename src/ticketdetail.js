@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const cancelBtn = document.querySelector('.btn-secondary');
   const saveBtn = document.getElementById('saveBtn');
   const logoutBtn = document.getElementById('logoutBtn');
+  const assignedToSelect = document.getElementById('assignedTo');
   
   // Get ticket ID from URL
   const urlParams = new URLSearchParams(window.location.search);
@@ -12,6 +13,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   const userId = urlParams.get('uid');
 
   let currentUserRole = null;
+  let allUsers = [];
+  let currentTicketData = null;
 
   if (!ticketId) {
     showMessage('❌ Fehler: Ticket-ID nicht gefunden.', 'error');
@@ -64,14 +67,48 @@ document.addEventListener('DOMContentLoaded', async () => {
           userDisplay.textContent = userName;
         }
         
+        // Load all users for assignee dropdown (only for Admin/Support)
+        if (currentUserRole === 1 || currentUserRole === 2) {
+          await loadAllUsers();
+        }
+        
         // Disable form for regular users
-        if (currentUserRole === ROLE_USER) {
+        if (currentUserRole === 3) {
           disableFormForUser();
         }
       }
     } catch (error) {
       console.error('Error loading current user:', error);
     }
+  }
+
+  async function loadAllUsers() {
+    try {
+      const res = await window.api.getUsers();
+      if (res && res.success && res.data) {
+        allUsers = res.data;
+        populateAssigneeDropdown();
+      }
+    } catch (error) {
+      console.error('Error loading users:', error);
+    }
+  }
+
+  function populateAssigneeDropdown() {
+    // Only show Admin and Support users
+    const supportUsers = allUsers.filter(u => u.rolle_id === 1 || u.rolle_id === 2);
+    
+    // Clear existing options except the first one
+    while (assignedToSelect.options.length > 1) {
+      assignedToSelect.remove(1);
+    }
+    
+    supportUsers.forEach(user => {
+      const option = document.createElement('option');
+      option.value = user.benutzer_id;
+      option.textContent = `${user.vorname} ${user.nachname}`;
+      assignedToSelect.appendChild(option);
+    });
   }
 
   function disableFormForUser() {
@@ -88,6 +125,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     
     showMessage('ℹ️ Sie können dieses Ticket nur ansehen.', 'info');
+  }
+
+  function disableAssigneeForUsers() {
+    // Only show assignee for Admin and Support
+    if (currentUserRole !== 1 && currentUserRole !== 2) {
+      assignedToSelect.disabled = true;
+    }
   }
 
   async function loadTicket(ticketId) {
@@ -107,6 +151,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         showMessage('❌ Ticket-Daten nicht gefunden', 'error');
         return;
       }
+      
+      currentTicketData = ticket;
       
       // Populate form fields
       document.getElementById('title').value = ticket.titel || '';
@@ -135,6 +181,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('createdDate').value = formattedDate;
       }
 
+      // Set assigned to
+      if (ticket.zugewiesen_an) {
+        assignedToSelect.value = ticket.zugewiesen_an;
+      }
+
+      disableAssigneeForUsers();
+
       // Update page title and status badge
       document.getElementById('ticketTitle').textContent = `[${ticket.status}] ${ticket.titel}`;
       updateStatusBadge(ticket.status);
@@ -160,7 +213,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         titel: formData.get('title'),
         beschreibung: formData.get('description'),
         kategorie: formData.get('category'),
-        status: formData.get('status')
+        status: formData.get('status'),
+        zugewiesen_an: formData.get('assignedTo') || null
       };
 
       const res = await window.api.updateTicket(ticketId, updatedTicket);

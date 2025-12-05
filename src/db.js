@@ -82,6 +82,31 @@ async function getTicketsByCreator(user_id) {
   }
 }
 
+// Get tickets for home page: assigned tickets OR created by user
+async function getHomeTickets(user_id, role_id) {
+  let conn;
+  try {
+    conn = await pool.getConnection();
+    // Admin/Support: see assigned tickets
+    // Users: see tickets they created
+    let query;
+    let params;
+    
+    if (role_id === 1 || role_id === 2) { // Admin=1, Support=2
+      query = "SELECT * FROM ticket WHERE zugewiesen_an = ?";
+      params = [user_id];
+    } else { // User=3
+      query = "SELECT * FROM ticket WHERE erstellt_von = ?";
+      params = [user_id];
+    }
+    
+    const rows = await conn.query(query, params);
+    return rows;
+  } finally {
+    if (conn) conn.release();
+  }
+}
+
 
 async function createTicket(title, description, customer_id, category, status, assigned_to = null) {
   let conn;
@@ -137,8 +162,8 @@ async function updateTicket(ticket_id, updatedData) {
   try {
     conn = await pool.getConnection();
     await conn.query(
-      'UPDATE ticket SET titel = ?, beschreibung = ?, kategorie_id = ?, status = ? WHERE ticket_id = ?',
-      [updatedData.titel, updatedData.beschreibung, updatedData.kategorie, updatedData.status, ticket_id]
+      'UPDATE ticket SET titel = ?, beschreibung = ?, kategorie_id = ?, status = ?, zugewiesen_an = ? WHERE ticket_id = ?',
+      [updatedData.titel, updatedData.beschreibung, updatedData.kategorie, updatedData.status, updatedData.zugewiesen_an, ticket_id]
     );
     return true;
   } finally {
@@ -298,4 +323,4 @@ async function tableExists(tableName) {
   */
 }
 
-module.exports = { getTickets, getAssignedTickets, getTicketsByCreator, getTicket, createTicket, updateTicket, getUser, getUserByEmail, getUsers, createUser, updateUser, deleteUser, getRoles, pool, autoSetup };
+module.exports = { getTickets, getAssignedTickets, getTicketsByCreator, getHomeTickets, getTicket, createTicket, updateTicket, getUser, getUserByEmail, getUsers, createUser, updateUser, deleteUser, getRoles, pool, autoSetup };

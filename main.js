@@ -69,6 +69,17 @@ ipcMain.handle('tickets:getByCreator', async (event, user_id) => {
   }
 });
 
+// Startseite Tickets: zugewiesen (Admin/Support) ODER erstellt (User)
+ipcMain.handle('tickets:getHome', async (event, user_id, role_id) => {
+  try {
+    const rows = await db.getHomeTickets(user_id, role_id);
+    return { success: true, data: rows };
+  } catch (err) {
+    console.error('DB getHomeTickets error', err);
+    return { success: false, error: err.message };
+  }
+});
+
 // Neues Ticket erstellen
 ipcMain.handle('tickets:create', async (event, ticket) => {
   try {
