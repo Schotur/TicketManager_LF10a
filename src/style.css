@@ -393,6 +393,12 @@ button:hover {
     background: #5568d3;
 }
 
+button:disabled {
+    background: #a0aec0;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
 .forgot-password {
     text-align: center;
     margin-top: 1rem;
@@ -913,12 +919,6 @@ body:has(header) .placeholder-box p {
     cursor: pointer;
 }
 
-.stat-card.active {
-    border-color: #667eea;
-    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);
-    transform: translateY(-4px);
-}
-
 .stat-card::before {
     content: '';
     position: absolute;
@@ -926,7 +926,9 @@ body:has(header) .placeholder-box p {
     left: 0;
     width: 100%;
     height: 3px;
+    /*
     background: linear-gradient(90deg, #667eea, #764ba2);
+    */
     opacity: 0;
     transition: opacity 0.3s ease;
 }
@@ -934,11 +936,24 @@ body:has(header) .placeholder-box p {
 .stat-card:hover {
     transform: translateY(-8px);
     box-shadow: 0 12px 24px rgba(16, 24, 40, 0.12);
-    border-color: #667eea;
 }
 
 .stat-card:hover::before {
     opacity: 1;
+}
+
+.stat-card.stat-gesamt{
+    border-left:4px solid #667eea ;
+}
+
+.stat-card.stat-gesamt:hover{
+    border-color: #667eea;
+}
+
+.stat-card.stat-gesamt.active {
+    border-color: #667eea;
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);
+    transform: translateY(-4px);
 }
 
 .stat-card.stat-offen {
@@ -949,6 +964,12 @@ body:has(header) .placeholder-box p {
     border-color: #f59e0b;
 }
 
+.stat-card.stat-offen.active {
+    border-color: #f59e0b;
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);
+    transform: translateY(-4px);
+}
+
 .stat-card.stat-bearbeitung {
     border-left: 4px solid #3b82f6;
 }
@@ -957,12 +978,24 @@ body:has(header) .placeholder-box p {
     border-color: #3b82f6;
 }
 
+.stat-card.stat-bearbeitung.active {
+    border-color: #3b82f6;
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);
+    transform: translateY(-4px);
+}
+
 .stat-card.stat-geschlossen {
     border-left: 4px solid #10b981;
 }
 
 .stat-card.stat-geschlossen:hover {
     border-color: #10b981;
+}
+
+.stat-card.stat-geschlossen.active {
+    border-color: #10b981;
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);
+    transform: translateY(-4px);
 }
 
 .stat-number {

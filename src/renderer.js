@@ -34,6 +34,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const userCache = new Map();
   let allUsers = [];
   let isLoadingTickets = false; // Lock für Mehrfach-Loads
+  let currentView = 'home'; // Track whether we're in 'home' or 'all' view
 
   // Rollen: Admin=1, Support=2, Benutzer=3
   const ROLE_ADMIN = 1;
@@ -172,9 +173,53 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
+  async function loadAllTickets() {
+    if (isLoadingTickets) {
+      return;
+    }
+    
+    isLoadingTickets = true;
+    
+    try {
+      ticketsUl.innerHTML = '<li>Lade...</li>';
+      let res;
+      
+      // Load ALL tickets
+      res = await window.api.getTickets();
+      
+      if (!res.success) {
+        ticketsUl.innerHTML = `<li class="error">Fehler: ${res.error}</li>`;
+        return;
+      }
+      ticketsCache = res.data || [];
+      
+      if (ticketsCache.length === 0) {
+        ticketsUl.innerHTML = '<li>Keine Tickets gefunden.</li>';
+        updatePagination();
+        updateStatistics();
+        return;
+      }
+      
+      // Apply current filter and render
+      if (currentStatusFilter === 'all') {
+        filteredTickets = ticketsCache;
+      } else {
+        filteredTickets = ticketsCache.filter(t => t.status === currentStatusFilter);
+      }
+      
+      updateStatistics();
+      currentPage = 1;
+      renderPage(currentPage);
+    } finally {
+      isLoadingTickets = false;
+    }
+  }
+
   function updateHomeSubtitle() {
     const subtitle = document.getElementById('homeSubtitle');
-    if (currentUserRole === ROLE_ADMIN || currentUserRole === ROLE_SUPPORT) {
+    if (currentView === 'all') {
+      subtitle.textContent = 'Alle Tickets im System';
+    } else if (currentUserRole === ROLE_ADMIN || currentUserRole === ROLE_SUPPORT) {
       subtitle.textContent = 'Ihnen zugewiesene Tickets';
     } else if (currentUserRole === ROLE_USER) {
       subtitle.textContent = 'Von Ihnen erstellte Tickets';
@@ -427,13 +472,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       
       // Show appropriate view
       if (action === 'home') {
+        currentView = 'home';
         document.getElementById('home').classList.remove('hidden');
         updateHomeSubtitle();
         loadTickets();
       } else if (action === 'show-all') {
+        currentView = 'all';
         document.getElementById('home').classList.remove('hidden');
         updateHomeSubtitle();
-        loadTickets();
+        loadAllTickets();
       } else if (action === 'create-ticket') {
         document.getElementById('new-ticket').classList.remove('hidden');
       }
@@ -442,6 +489,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // initial load
   setTimeout(() => {
+    currentView = 'home';
     updateHomeSubtitle();
     loadTickets();
     // Activate home button

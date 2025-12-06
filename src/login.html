@@ -5,58 +5,113 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        .error-message {
+            color: #d32f2f;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background: #ffebee;
+            border-radius: 5px;
+            display: none;
+        }
+        .error-message.show {
+            display: block;
+        }
+    </style>
 </head>
 <body>
     <div class="login-container">
         <h2>MaJoNonaise</h2>
-        <form>
+        <div id="errorMessage" class="error-message"></div>
+        <form id="loginForm" novalidate>
             <div class="form-group">
                 <label for="eMail_login">E-Mail</label>
-                <input type="text" id="eMail_login" name="eMail_login" required>
+                <input type="text" id="eMail_login" name="eMail_login" autocomplete="email">
             </div>
             <div class="form-group">
                 <label for="password_login">Passwort</label>
-                <input type="password" id="password_login" name="password_login" required>
+                <input type="password" id="password_login" name="password_login" autocomplete="current-password">
             </div>
-            <button id="loginBtn" type="submit">Anmelden</button>
-            <!--
-            <div class="forgot-password">
-                <a href="#">Passwort vergessen?</a>
-            </div>
-            -->
+            <button id="loginBtn" type="button">Anmelden</button>
         </form>
-        </div>
+    </div>
 </body>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    const form = document.querySelector('form');
+    const form = document.getElementById('loginForm');
     const loginBtn = document.getElementById('loginBtn');
+    const emailInput = document.getElementById('eMail_login');
+    const passwordInput = document.getElementById('password_login');
+    const errorMessage = document.getElementById('errorMessage');
     
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const email = document.getElementById('eMail_login').value.trim();
-        const password = document.getElementById('password_login').value;
+    function showError(message) {
+        errorMessage.textContent = message;
+        errorMessage.classList.add('show');
+    }
+    
+    function clearError() {
+        errorMessage.textContent = '';
+        errorMessage.classList.remove('show');
+    }
+    
+    loginBtn.addEventListener('click', async () => {
+        clearError();
+        
+        const email = emailInput.value.trim();
+        const password = passwordInput.value;
+        
         if (!email) {
-            alert('Bitte E-Mail eingeben.');
+            showError('Bitte E-Mail eingeben.');
+            emailInput.focus();
             return;
         }
-        const res = await window.api.getUserByEmail(email);
-        if (res && res.success && res.user) {
-            const user = res.user;
-            if (user.passwort_hash === password) {
-                window.location.href = `index.html?id=${user.benutzer_id}`;
-            } else {
-                alert('Falsches Passwort.');
-                // Clear password field but keep focus on it
-                document.getElementById('password_login').value = '';
-                document.getElementById('password_login').focus();
-            }
-        } else {
-            alert('Benutzer nicht gefunden.');
-            // Clear email field
-            document.getElementById('eMail_login').value = '';
-            document.getElementById('eMail_login').focus();
+        
+        if (!password) {
+            showError('Bitte Passwort eingeben.');
+            passwordInput.focus();
+            return;
         }
+        
+        // Disable button during login attempt
+        loginBtn.disabled = true;
+        
+        try {
+            const res = await window.api.getUserByEmail(email);
+            if (res && res.success && res.user) {
+                const user = res.user;
+                if (user.passwort_hash === password) {
+                    window.location.href = `index.html?id=${user.benutzer_id}`;
+                } else {
+                    showError('Falsches Passwort.');
+                    emailInput.value = '';
+                    passwordInput.value = '';
+                    emailInput.focus();
+                    loginBtn.disabled = false;
+                }
+            } else {
+                showError('Benutzer nicht gefunden.');
+                emailInput.value = '';
+                passwordInput.value = '';
+                emailInput.focus();
+                loginBtn.disabled = false;
+            }
+        } catch (error) {
+            console.error('Login error:', error);
+            showError('Ein Fehler beim Login ist aufgetreten. Bitte versuchen Sie es erneut.');
+            emailInput.value = '';
+            passwordInput.value = '';
+            loginBtn.disabled = false;
+        }
+    });
+    
+    // Allow Enter key to submit
+    emailInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') loginBtn.click();
+    });
+    
+    passwordInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') loginBtn.click();
     });
 });
 </script>
