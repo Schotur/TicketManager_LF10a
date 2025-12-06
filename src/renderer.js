@@ -217,14 +217,20 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function updateHomeSubtitle() {
     const subtitle = document.getElementById('homeSubtitle');
+    const unassignedCard = document.querySelector('.stat-unassigned');
+    
     if (currentView === 'all') {
       subtitle.textContent = 'Alle Tickets im System';
+      if (unassignedCard) unassignedCard.style.display = '';
     } else if (currentUserRole === ROLE_ADMIN || currentUserRole === ROLE_SUPPORT) {
       subtitle.textContent = 'Ihnen zugewiesene Tickets';
+      if (unassignedCard) unassignedCard.style.display = 'none';
     } else if (currentUserRole === ROLE_USER) {
       subtitle.textContent = 'Von Ihnen erstellte Tickets';
+      if (unassignedCard) unassignedCard.style.display = 'none';
     } else {
       subtitle.textContent = 'Ihre Tickets';
+      if (unassignedCard) unassignedCard.style.display = 'none';
     }
   }
 
@@ -232,6 +238,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     currentStatusFilter = filterStatus;
     if (filterStatus === 'all') {
       filteredTickets = ticketsCache;
+    } else if (filterStatus === 'unassigned') {
+      filteredTickets = ticketsCache.filter(t => !t.zugewiesen_an || t.zugewiesen_an === null);
     } else {
       filteredTickets = ticketsCache.filter(t => t.status === filterStatus);
     }
@@ -262,17 +270,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     const offen = ticketsCache.filter(t => t.status === 'Offen').length;
     const bearbeitung = ticketsCache.filter(t => t.status === 'In Bearbeitung').length;
     const geschlossen = ticketsCache.filter(t => t.status === 'Geschlossen').length;
+    const unassigned = ticketsCache.filter(t => !t.zugewiesen_an || t.zugewiesen_an === null).length;
 
     // Update statistics display
     const statTotal = document.getElementById('statTotal');
     const statOffen = document.getElementById('statOffen');
     const statBearbeitung = document.getElementById('statBearbeitung');
     const statGeschlossen = document.getElementById('statGeschlossen');
+    const statUnassigned = document.getElementById('statUnassigned');
 
     if (statTotal) statTotal.textContent = total;
     if (statOffen) statOffen.textContent = offen;
     if (statBearbeitung) statBearbeitung.textContent = bearbeitung;
     if (statGeschlossen) statGeschlossen.textContent = geschlossen;
+    if (statUnassigned) statUnassigned.textContent = unassigned;
   }
 
   async function renderPage(page) {

@@ -1025,6 +1025,24 @@ body:has(header) .placeholder-box p {
     color: #10b981;
 }
 
+.stat-card.stat-unassigned {
+    border-left: 4px solid #ec4899;
+}
+
+.stat-card.stat-unassigned:hover {
+    border-color: #ec4899;
+}
+
+.stat-card.stat-unassigned.active {
+    border-color: #ec4899;
+    box-shadow: 0 8px 24px rgba(236, 72, 153, 0.2);
+    transform: translateY(-4px);
+}
+
+.stat-card.stat-unassigned .stat-number {
+    color: #ec4899;
+}
+
 .stat-label {
     font-size: 0.85rem;
     color: #6b7280;
