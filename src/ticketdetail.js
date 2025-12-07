@@ -267,6 +267,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       messageDiv.textContent = message;
       messageDiv.className = `message ${type}`;
       messageDiv.classList.remove('hidden');
+      
+      // Automatically hide the message after 3 seconds
+      setTimeout(() => {
+        messageDiv.classList.add('hidden');
+      }, 3000);
     }
   }
 

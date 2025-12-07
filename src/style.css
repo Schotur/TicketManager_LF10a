@@ -1294,7 +1294,7 @@ body:has(header) .back-link:hover {
     display: none;
 }
 
-.message:not(:empty) {
+.message:not(:empty):not(.hidden) {
     display: block;
 }
 
