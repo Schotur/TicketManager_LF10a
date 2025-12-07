@@ -4,6 +4,37 @@
     box-sizing: border-box;
 }
 
+/* Dark Mode Styles */
+:root {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f4f6f8;
+    --bg-tertiary: #f9fafb;
+    --text-primary: #222;
+    --text-secondary: #555;
+    --text-muted: #6b7280;
+    --border-color: #e1e4e8;
+    --shadow-color: rgba(16, 24, 40, 0.08);
+    --input-border: #e5e7eb;
+    --header-bg: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+    --sidemenu-bg: linear-gradient(180deg, #ffffff 0%, #f9fafb 100%);
+    --card-bg: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+}
+
+html.dark-mode {
+    --bg-primary: #1f2937;
+    --bg-secondary: #111827;
+    --bg-tertiary: #1a202c;
+    --text-primary: #f3f4f6;
+    --text-secondary: #d1d5db;
+    --text-muted: #9ca3af;
+    --border-color: #374151;
+    --shadow-color: rgba(0, 0, 0, 0.3);
+    --input-border: #4b5563;
+    --header-bg: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+    --sidemenu-bg: linear-gradient(180deg, #1f2937 0%, #111827 100%);
+    --card-bg: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+}
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -11,6 +42,7 @@ body {
     justify-content: center;
     align-items: center;
     min-height: 100vh;
+    color: var(--text-primary);
 }
 
 /* If the page contains a header (the app's main/index page),
@@ -19,18 +51,18 @@ body:has(header) {
     display: block;
     justify-content: initial;
     align-items: initial;
-    background: #f4f6f8;
-    color: #222;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
     min-height: 100vh;
 }
 
 /* Header (index) */
 body:has(header) header {
-    background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
-    color: #222;
+    background: var(--header-bg);
+    color: var(--text-primary);
     padding: 20px 24px;
-    box-shadow: 0 4px 12px rgba(16,24,40,0.08);
-    border-bottom: 2px solid #f0f2f5;
+    box-shadow: 0 4px 12px var(--shadow-color);
+    border-bottom: 2px solid var(--border-color);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -55,7 +87,7 @@ body:has(header) .header-right {
 }
 
 body:has(header) #userDisplay {
-    color: #555;
+    color: var(--text-secondary);
     font-weight: 500;
     font-size: 0.95rem;
 }
@@ -77,6 +109,26 @@ body:has(header) .btn-logout:hover {
     box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
+/* Theme Toggle Button */
+body:has(header) .btn-theme-toggle {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+
+body:has(header) .btn-theme-toggle:hover {
+    background: var(--bg-tertiary);
+    transform: scale(1.1);
+}
+
+html.dark-mode body:has(header) .btn-theme-toggle {
+    color: #f3f4f6;
+}
+
 /* Main app container for index page */
 body:has(header) .app-container {
     display: flex;
@@ -86,10 +138,10 @@ body:has(header) .app-container {
 /* Side menu styling */
 body:has(header) .sidemenu {
     width: 220px;
-    background: linear-gradient(180deg, #ffffff 0%, #f9fafb 100%);
-    border-right: 1px solid #e1e4e8;
+    background: var(--sidemenu-bg);
+    border-right: 1px solid var(--border-color);
     padding: 16px 0;
-    box-shadow: 2px 0 12px rgba(16,24,40,0.08);
+    box-shadow: 2px 0 12px var(--shadow-color);
 }
 
 body:has(header) .sidemenu-nav {
@@ -105,7 +157,7 @@ body:has(header) .sidemenu-item {
     background: none;
     border: none;
     border-left: 3px solid transparent;
-    color: #555;
+    color: var(--text-secondary);
     cursor: pointer;
     transition: all 0.3s ease;
     font-size: 0.95rem;
@@ -113,22 +165,22 @@ body:has(header) .sidemenu-item {
 }
 
 body:has(header) .sidemenu-item:hover:not(:disabled) {
-    background: linear-gradient(90deg, #f5f7fa 0%, transparent 100%);
-    color: #222;
+    background: linear-gradient(90deg, var(--bg-tertiary) 0%, transparent 100%);
+    color: var(--text-primary);
     padding-left: 20px;
 }
 
 body:has(header) .sidemenu-item.active {
-    background: linear-gradient(90deg, #667eea 0%, #667eea 3px, #f0f2f5 3px, #f0f2f5 100%);
+    background: linear-gradient(90deg, #667eea 0%, #667eea 3px, var(--bg-tertiary) 3px, var(--bg-tertiary) 100%);
     border-left-color: transparent;
-    color: #222;
+    color: var(--text-primary);
     font-weight: 600;
 }
 
 body:has(header) .sidemenu-item:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-    color: #999;
+    color: var(--text-muted);
 }
 
 /* Main content area */
@@ -149,10 +201,10 @@ body:has(header) #content-area {
 }
 
 body:has(header) section.view {
-    background: #fff;
+    background: var(--bg-primary);
     padding: 24px;
     border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(16, 24, 40, 0.06);
+    box-shadow: 0 2px 8px var(--shadow-color);
     margin: 24px;
     flex: 1;
     display: flex;
@@ -167,20 +219,20 @@ body:has(header) section.view.hidden {
 body:has(header) .placeholder-box {
     padding: 40px 20px;
     text-align: center;
-    background: #f9fafb;
-    border: 2px dashed #d1d7df;
+    background: var(--bg-tertiary);
+    border: 2px dashed var(--border-color);
     border-radius: 8px;
-    color: #6b7280;
+    color: var(--text-muted);
 }
 
 body:has(header) .placeholder-box h2 {
-    color: #4b5563;
+    color: var(--text-primary);
     margin-bottom: 8px;
     font-size: 1.1rem;
 }
 
 body:has(header) .placeholder-box p {
-    color: #9ca3af;
+    color: var(--text-muted);
     font-size: 0.9rem;
 }
 
@@ -212,8 +264,8 @@ body:has(header) .hint {
     list-style: none;
     padding: 0;
     margin: 0 0 12px 0;
-    background: #fff;
-    border: 1px solid #e6e9ee;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
     border-radius: 0;
     overflow: hidden;
     flex: 1;
@@ -222,13 +274,13 @@ body:has(header) .hint {
 #tickets li {
     display: block;
     padding: 12px 16px;
-    border-bottom: 1px solid #f1f3f6;
+    border-bottom: 1px solid var(--border-color);
     transition: all 0.3s ease;
     position: relative;
 }
 
 #tickets li:hover {
-    background: linear-gradient(90deg, #f9fafb 0%, transparent 100%);
+    background: var(--bg-tertiary);
     transform: translateX(4px);
     border-left: 3px solid #667eea;
     padding-left: 13px;
@@ -238,6 +290,10 @@ body:has(header) .hint {
     color: #153243;
     text-decoration: none;
     transition: color 0.3s ease;
+}
+
+html.dark-mode #tickets li a {
+    color: #60a5fa;
 }
 
 #tickets li:hover a {
@@ -252,9 +308,9 @@ body:has(header) .hint {
 }
 
 #pagination button {
-    background: #ffffff;
-    color: #374151;
-    border: 1px solid #d1d7df;
+    background: var(--bg-primary);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
     padding: 6px 10px;
     border-radius: 6px;
     cursor: pointer;
@@ -267,7 +323,7 @@ body:has(header) .hint {
 
 #pageInfo {
     font-size: 0.95rem;
-    color: #374151;
+    color: var(--text-secondary);
 }
 
 /* Ticket meta: author and date */
@@ -280,43 +336,18 @@ body:has(header) .hint {
 
 .ticket-author {
     font-size: 0.9rem;
-    color: #6b7280; /* muted */
+    color: var(--text-muted);
 }
 
 .ticket-date {
     font-size: 0.85rem;
-    color: #9ca3af; /* lighter muted */
-}
-
-header {
-    background: #2f3b52;
-    color: #fff;
-    padding: 16px;
-}
-
-main {
-    display: flex;
-    gap: 24px;
-    padding: 16px;
-}
-
-section {
-    background: #f8f8f8;
-    padding: 12px;
-    border-radius: 8px;
-    flex: 1;
-}
-
-#tickets li {
-    list-style: none;
-    padding: 8px;
-    border-bottom: 1px solid #ddd;
+    color: var(--text-muted);
 }
 
 label {
     display: block;
     margin-bottom: 0.5rem;
-    color: #555;
+    color: var(--text-primary);
     font-weight: bold;
 }
 
@@ -326,10 +357,12 @@ textarea {
     margin-bottom: 8px;
     padding: 10px 12px;
     box-sizing: border-box;
-    border: 2px solid #e5e7eb;
+    border: 2px solid var(--input-border);
     border-radius: 6px;
     font-family: inherit;
     transition: all 0.3s ease;
+    background: var(--bg-primary);
+    color: var(--text-primary);
 }
 
 input:focus,
@@ -342,9 +375,11 @@ textarea:focus {
 input[type="text"],
 input[type="password"] {
     padding: 0.75rem;
-    border: 1px solid #ddd;
+    border: 1px solid var(--input-border);
     border-radius: 5px;
     font-size: 1rem;
+    background: var(--bg-primary);
+    color: var(--text-primary);
 }
 
 input[type="text"]:focus,
@@ -359,7 +394,7 @@ input[type="password"]:focus {
 }
 
 .login-container {
-    background: white;
+    background: var(--bg-primary);
     padding: 2rem;
     border-radius: 10px;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
@@ -369,7 +404,7 @@ input[type="password"]:focus {
 
 h2 {
     text-align: center;
-    color: #333;
+    color: var(--text-primary);
     margin-bottom: 1.5rem;
 }
 
@@ -436,9 +471,9 @@ body:has(header) .ticket-detail-main {
 }
 
 .ticket-detail-container {
-    background: #fff;
+    background: var(--bg-primary);
     border-radius: 8px;
-    box-shadow: 0 6px 18px rgba(16,24,40,0.06);
+    box-shadow: 0 6px 18px var(--shadow-color);
     padding: 32px;
 }
 
@@ -448,13 +483,13 @@ body:has(header) .ticket-detail-main {
     align-items: center;
     margin-bottom: 32px;
     padding-bottom: 16px;
-    border-bottom: 2px solid #f1f3f6;
+    border-bottom: 2px solid var(--border-color);
 }
 
 .ticket-header h2 {
     margin: 0;
     font-size: 1.75rem;
-    color: #222;
+    color: var(--text-primary);
 }
 
 .ticket-status-badge {
@@ -497,9 +532,9 @@ body:has(header) .ticket-detail-main {
 .form-section h3 {
     margin: 0;
     font-size: 1.1rem;
-    color: #333;
+    color: var(--text-primary);
     padding-bottom: 8px;
-    border-bottom: 1px solid #f1f3f6;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .form-group {
@@ -517,7 +552,7 @@ body:has(header) .ticket-detail-main {
 .form-group label {
     display: block;
     margin-bottom: 0;
-    color: #333;
+    color: var(--text-primary);
     font-weight: 600;
     font-size: 0.95rem;
 }
@@ -526,11 +561,13 @@ body:has(header) .ticket-detail-main {
 .form-group textarea,
 .form-group select {
     padding: 10px 12px;
-    border: 1px solid #d1d7df;
+    border: 1px solid var(--input-border);
     border-radius: 6px;
     font-size: 1rem;
     font-family: inherit;
     transition: border-color 0.2s, box-shadow 0.2s;
+    background: var(--bg-primary);
+    color: var(--text-primary);
 }
 
 .form-group input:focus,
@@ -542,8 +579,8 @@ body:has(header) .ticket-detail-main {
 }
 
 .form-group input:disabled {
-    background: #f9fafb;
-    color: #6b7280;
+    background: var(--bg-tertiary);
+    color: var(--text-muted);
 }
 
 .form-group textarea {
@@ -807,10 +844,12 @@ body:has(header) .ticket-detail-main {
 .search-box {
     width: 100%;
     padding: 10px 14px;
-    border: 2px solid #e5e7eb;
+    border: 2px solid var(--input-border);
     border-radius: 6px;
     font-size: 0.95rem;
     transition: all 0.3s ease;
+    background: var(--bg-primary);
+    color: var(--text-primary);
 }
 
 .search-box:focus {
@@ -918,13 +957,13 @@ body:has(header) .placeholder-box p {
 }
 
 .stat-card {
-    background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+    background: var(--card-bg);
     padding: 20px;
     border-radius: 12px;
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--border-color);
     text-align: center;
     transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    box-shadow: 0 2px 8px rgba(16, 24, 40, 0.06);
+    box-shadow: 0 2px 8px var(--shadow-color);
     position: relative;
     overflow: hidden;
     cursor: pointer;
@@ -1018,12 +1057,6 @@ body:has(header) .placeholder-box p {
     transition: all 0.3s ease;
 }
 
-.stat-card:hover .stat-number {
-    /*
-    font-size: 2.8rem;
-    */
-}
-
 .stat-card.stat-offen .stat-number {
     color: #f59e0b;
 }
@@ -1056,7 +1089,7 @@ body:has(header) .placeholder-box p {
 
 .stat-label {
     font-size: 0.85rem;
-    color: #6b7280;
+    color: var(--text-muted);
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -1185,28 +1218,28 @@ body:has(header) .btn-edit:hover {
 body:has(header) .users-table {
     width: 100%;
     border-collapse: collapse;
-    background: white;
+    background: var(--bg-primary);
     border-radius: 8px;
     overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 1px 3px var(--shadow-color);
 }
 
 body:has(header) .users-table thead {
-    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
-    border-bottom: 2px solid #e5e7eb;
+    background: var(--bg-tertiary);
+    border-bottom: 2px solid var(--border-color);
 }
 
 body:has(header) .users-table th {
     padding: 12px 16px;
     text-align: left;
     font-weight: 600;
-    color: #374151;
+    color: var(--text-primary);
     font-size: 0.9rem;
 }
 
 body:has(header) .users-table td {
     padding: 12px 16px;
-    border-bottom: 1px solid #f0f2f5;
+    border-bottom: 1px solid var(--border-color);
 }
 
 body:has(header) .users-table tbody tr {
@@ -1214,7 +1247,7 @@ body:has(header) .users-table tbody tr {
 }
 
 body:has(header) .users-table tbody tr:hover {
-    background: #f9fafb;
+    background: var(--bg-tertiary);
 }
 
 body:has(header) .users-table tbody tr.selected {
@@ -1227,10 +1260,10 @@ body:has(header) .users-table input[type="checkbox"] {
 
 /* User detail form */
 body:has(header) .user-detail-form {
-    background: white;
+    background: var(--bg-primary);
     padding: 24px;
     border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 1px 3px var(--shadow-color);
     max-width: 600px;
 }
 
@@ -1248,7 +1281,7 @@ body:has(header) .form-group {
 
 body:has(header) .form-group label {
     font-weight: 600;
-    color: #374151;
+    color: var(--text-primary);
     font-size: 0.9rem;
 }
 
@@ -1256,11 +1289,13 @@ body:has(header) .form-group input,
 body:has(header) .form-group select,
 body:has(header) .form-group textarea {
     padding: 10px 12px;
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--input-border);
     border-radius: 6px;
     font-size: 0.95rem;
     font-family: inherit;
     transition: all 0.3s ease;
+    background: var(--bg-primary);
+    color: var(--text-primary);
 }
 
 body:has(header) .form-group input:focus,
@@ -1292,7 +1327,7 @@ body:has(header) .section-header {
 
 body:has(header) .section-header h2 {
     margin: 0;
-    color: #222;
+    color: var(--text-primary);
     font-size: 1.5rem;
 }
 
@@ -1355,35 +1390,36 @@ body:has(header) .back-link:hover {
 .comments-section {
     margin-top: 40px;
     padding-top: 30px;
-    border-top: 2px solid #e1e4e8;
+    border-top: 2px solid var(--border-color);
 }
 
 .comments-section h3 {
     font-size: 1.1rem;
     font-weight: 600;
-    color: #222;
+    color: var(--text-primary);
     margin-bottom: 20px;
 }
 
 /* Comment Input Form */
 .comment-input-form {
-    background: #f9fafb;
+    background: var(--bg-tertiary);
     padding: 16px;
     border-radius: 8px;
     margin-bottom: 24px;
-    border: 1px solid #e1e4e8;
+    border: 1px solid var(--border-color);
 }
 
 .comment-input-form textarea {
     width: 100%;
     padding: 12px;
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--input-border);
     border-radius: 6px;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     font-size: 0.95rem;
     resize: vertical;
     margin-bottom: 12px;
-    background: white;
+    background: var(--bg-primary);
+    color: var(--text-primary);
 }
 
 .comment-input-form textarea:focus {
@@ -1404,16 +1440,16 @@ body:has(header) .back-link:hover {
 }
 
 .comment-item {
-    background: #f9fafb;
-    border: 1px solid #e1e4e8;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     padding: 16px;
     transition: all 0.2s ease;
 }
 
 .comment-item:hover {
-    border-color: #d1d5db;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    border-color: var(--border-color);
+    box-shadow: 0 2px 8px var(--shadow-color);
 }
 
 .comment-header {
@@ -1425,13 +1461,13 @@ body:has(header) .back-link:hover {
 
 .comment-author {
     font-weight: 600;
-    color: #222;
+    color: var(--text-primary);
     margin-right: 8px;
 }
 
 .comment-meta {
     font-size: 0.85rem;
-    color: #666;
+    color: var(--text-muted);
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
@@ -1447,12 +1483,12 @@ body:has(header) .back-link:hover {
 }
 
 .comment-datetime {
-    color: #999;
+    color: var(--text-muted);
     font-size: 0.85rem;
 }
 
 .comment-content {
-    color: #444;
+    color: var(--text-primary);
     line-height: 1.6;
     word-wrap: break-word;
 }
@@ -1460,6 +1496,6 @@ body:has(header) .back-link:hover {
 .comments-list-empty {
     text-align: center;
     padding: 32px 16px;
-    color: #999;
+    color: var(--text-muted);
     font-style: italic;
 }

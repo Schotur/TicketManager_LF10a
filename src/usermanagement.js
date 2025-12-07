@@ -1,4 +1,33 @@
 // usermanagement.js
+
+// Dark Mode Toggle Function
+function initializeDarkMode() {
+  const themeToggleBtn = document.getElementById('themToggleBtn');
+  
+  if (!themeToggleBtn) return;
+
+  // Check localStorage for saved preference
+  const savedTheme = localStorage.getItem('theme') || 'light';
+  const html = document.documentElement;
+  
+  // Apply saved theme
+  if (savedTheme === 'dark') {
+    html.classList.add('dark-mode');
+    themeToggleBtn.textContent = '☀️';
+  } else {
+    html.classList.remove('dark-mode');
+    themeToggleBtn.textContent = '🌙';
+  }
+
+  // Toggle dark mode on button click
+  themeToggleBtn.addEventListener('click', () => {
+    const isDarkMode = html.classList.toggle('dark-mode');
+    const newTheme = isDarkMode ? 'dark' : 'light';
+    localStorage.setItem('theme', newTheme);
+    themeToggleBtn.textContent = isDarkMode ? '☀️' : '🌙';
+  });
+}
+
 let currentUserId = null;
 let currentUserRole = null;
 let usersCache = [];
@@ -6,6 +35,9 @@ let rolesCache = [];
 let selectedUsers = new Set();
 
 document.addEventListener('DOMContentLoaded', async () => {
+  // Initialize dark mode first
+  initializeDarkMode();
+
   // Get user ID from URL
   const urlParams = new URLSearchParams(window.location.search);
   currentUserId = urlParams.get('id');
