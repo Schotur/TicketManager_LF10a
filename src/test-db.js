@@ -1,9 +1,9 @@
-const db = require('./src/db');
+const db = require('./db');
 require('dotenv').config();
 
 async function testDb() {
   // Initialize the pool
-  require('./src/db').autoSetup().then(async () => {
+  require('./db').autoSetup().then(async () => {
     try {
       // Test getHomeTickets for user_id = 3 (Benutzer), rolle_id = 3
       console.log('\n=== Testing getHomeTickets for User (rolle_id=3, user_id=3) ===');

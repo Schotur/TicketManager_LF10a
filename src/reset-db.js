@@ -34,25 +34,30 @@ async function resetDatabase() {
     });
 
     // Read table creation script and remove USE statement
-    const tableCreatorPath = path.join(__dirname, 'resources', 'tablecreater.sql');
+    const tableCreatorPath = path.join(__dirname, '..', 'resources', 'tablecreater.sql');
     let tableCreatorSQL = fs.readFileSync(tableCreatorPath, 'utf8');
     tableCreatorSQL = tableCreatorSQL.replace(/CREATE DATABASE.*?;[\r\n]*/gs, '').replace(/USE.*?;[\r\n]*/gs, '');
     await conn.query(tableCreatorSQL);
     console.log('Tables created');
 
     // Read and execute insert data script
-    const insertDataPath = path.join(__dirname, 'resources', 'insertdata.sql');
+    const insertDataPath = path.join(__dirname, '..', 'resources', 'insertdata.sql');
     let insertDataSQL = fs.readFileSync(insertDataPath, 'utf8');
     insertDataSQL = insertDataSQL.replace(/CREATE DATABASE.*?;[\r\n]*/gs, '').replace(/USE.*?;[\r\n]*/gs, '');
     await conn.query(insertDataSQL);
     console.log('Data inserted');
 
     conn.end();
-    console.log('Database reset successfully!');
+
+    console.log('Database reset completed successfully');
     process.exit(0);
   } catch (err) {
     console.error('Error resetting database:', err);
     process.exit(1);
+  } finally {
+    if (conn) {
+      conn.end();
+    }
   }
 }
 
