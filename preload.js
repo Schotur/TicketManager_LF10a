@@ -8,6 +8,7 @@ contextBridge.exposeInMainWorld('api', {
   getTicketById: async (ticket_id) => ipcRenderer.invoke('ticket:getById', ticket_id),
   createTicket: async (ticket) => ipcRenderer.invoke('tickets:create', ticket),
   updateTicket: async (ticket_id, updatedData) => ipcRenderer.invoke('ticket:update', ticket_id, updatedData),
+  deleteTicket: async (ticket_id) => ipcRenderer.invoke('ticket:delete', ticket_id),
   createComment: async (comment) => ipcRenderer.invoke('comments:create', comment),
   getCommentsByTicket: async (ticket_id) => ipcRenderer.invoke('comments:getByTicket', ticket_id),
   getUser: async (erstellt_von) => ipcRenderer.invoke('user:get', erstellt_von),

@@ -171,6 +171,20 @@ async function updateTicket(ticket_id, updatedData) {
   }
 }
 
+async function deleteTicket(ticket_id) {
+  let conn;
+  try {
+    conn = await pool.getConnection();
+    await conn.query(
+      'DELETE FROM ticket WHERE ticket_id = ?',
+      [ticket_id]
+    );
+    return true;
+  } finally {
+    if (conn) conn.release();
+  }
+}
+
 async function getUsers() {
   let conn;
   try {
@@ -359,4 +373,4 @@ async function getCommentsByTicket(ticket_id) {
   }
 }
 
-module.exports = { getTickets, getAssignedTickets, getTicketsByCreator, getHomeTickets, getTicket, createTicket, updateTicket, getUser, getUserByEmail, getUsers, createUser, updateUser, deleteUser, getRoles, createComment, getCommentsByTicket, pool, autoSetup };
+module.exports = { getTickets, getAssignedTickets, getTicketsByCreator, getHomeTickets, getTicket, createTicket, updateTicket, deleteTicket, getUser, getUserByEmail, getUsers, createUser, updateUser, deleteUser, getRoles, createComment, getCommentsByTicket, pool, autoSetup };

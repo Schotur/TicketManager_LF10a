@@ -384,4 +384,59 @@ document.addEventListener('DOMContentLoaded', async () => {
       showMessage('❌ Fehler beim Hinzufügen des Kommentars.', 'error');
     }
   }
+
+  async function deleteTicket(ticketId) {
+    // Check if user has permission (only Admin and Support can delete)
+    if (currentUserRole === ROLE_USER) {
+      showMessage('❌ Sie haben keine Berechtigung, Tickets zu löschen.', 'error');
+      return;
+    }
+
+    // Show confirmation dialog
+    const confirmed = confirm('⚠️ Sind Sie sicher, dass Sie dieses Ticket löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.');
+    
+    if (!confirmed) {
+      showMessage('ℹ️ Löschen abgebrochen.', 'info');
+      return;
+    }
+
+    // Show second confirmation
+    const doubleConfirmed = confirm('⚠️ Dieses Ticket wird endgültig gelöscht. Klicken Sie erneut auf "OK" zum Bestätigen.');
+    
+    if (!doubleConfirmed) {
+      showMessage('ℹ️ Löschen abgebrochen.', 'info');
+      return;
+    }
+
+    try {
+      showMessage('🗑️ Lösche Ticket...', 'loading');
+
+      const res = await window.api.deleteTicket(ticketId);
+
+      if (res.success) {
+        showMessage('✅ Ticket erfolgreich gelöscht.', 'success');
+        // Redirect to index.html immediately after successful deletion
+        window.location.href = userId ? `index.html?id=${userId}` : 'index.html';
+      } else {
+        showMessage(`❌ Fehler: ${res.error}`, 'error');
+      }
+    } catch (error) {
+      console.error('Error deleting ticket:', error);
+      showMessage('❌ Fehler beim Löschen des Tickets.', 'error');
+    }
+  }
+
+  // Show delete button only for Admin and Support, handle delete click
+  const deleteBtn = document.getElementById('deleteBtn');
+  if (deleteBtn) {
+    // Update visibility based on user role after load
+    if (currentUserRole === ROLE_ADMIN || currentUserRole === ROLE_SUPPORT) {
+      deleteBtn.style.display = 'inline-block';
+    }
+    
+    deleteBtn.addEventListener('click', async (event) => {
+      event.preventDefault();
+      await deleteTicket(ticketId);
+    });
+  }
 });

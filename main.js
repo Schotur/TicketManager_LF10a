@@ -160,6 +160,17 @@ ipcMain.handle('ticket:update', async (event, ticket_id, updatedData) => {
   }
 });
 
+// Ticket löschen
+ipcMain.handle('ticket:delete', async (event, ticket_id) => {
+  try {
+    await db.deleteTicket(ticket_id);
+    return { success: true };
+  } catch (err) {
+    console.error('DB deleteTicket error', err);
+    return { success: false, error: err.message };
+  }
+});
+
 // Alle Benutzer holen
 ipcMain.handle('users:getAll', async () => {
   try {

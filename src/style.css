@@ -560,7 +560,8 @@ body:has(header) .ticket-detail-main {
 }
 
 .btn-primary,
-.btn-secondary {
+.btn-secondary,
+.btn-danger {
     padding: 10px 24px;
     border: none;
     border-radius: 6px;
@@ -588,6 +589,16 @@ body:has(header) .ticket-detail-main {
 
 .btn-secondary:hover {
     background: #e5e7eb;
+}
+
+.btn-danger {
+    background: #ef4444;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #dc2626;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
 }
 
 .message {
@@ -1134,6 +1145,22 @@ body:has(header) .btn-secondary {
 body:has(header) .btn-secondary:hover {
     background: #e5e7eb;
     border-color: #9ca3af;
+}
+
+body:has(header) .btn-danger {
+    background: #ef4444;
+    color: white;
+    padding: 10px 24px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+body:has(header) .btn-danger:hover {
+    background: #dc2626;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
 }
 
 body:has(header) .btn-small {
