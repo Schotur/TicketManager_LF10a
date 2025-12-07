@@ -1,7 +1,14 @@
 document.addEventListener('DOMContentLoaded', function () {
   const button = document.getElementById('createTicketBtn');
   button.addEventListener('click', function () {
-    window.location.href = 'index.html';
+    // Get current user ID from URL and keep it when navigating
+    const urlParams = new URLSearchParams(window.location.search);
+    const userId = urlParams.get('id');
+    if (userId) {
+      window.location.href = `index.html?id=${userId}`;
+    } else {
+      window.location.href = 'index.html';
+    }
   });
   
 const urlParams = new URLSearchParams(window.location.search);

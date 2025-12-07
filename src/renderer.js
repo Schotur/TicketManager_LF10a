@@ -397,59 +397,58 @@ document.addEventListener('DOMContentLoaded', async () => {
   prevBtn.addEventListener('click', () => renderPage(currentPage - 1));
   nextBtn.addEventListener('click', () => renderPage(currentPage + 1));
 
-  createBtn.addEventListener('click', async () => {
-    const title = titleInput.value.trim();
-    const description = descInput.value.trim();
-    const category = cateInput.value;
-    // Only allow assignee for Admin and Support
-    const assigneeId = (currentUserRole === ROLE_ADMIN || currentUserRole === ROLE_SUPPORT) 
-      ? (assigneeInput.value || null) 
-      : null;
-    
-    if (!title) {
-      createResult.textContent = 'Bitte Betreff eingeben.';
-      createResult.style.color = '#dc2626';
-      return;
-    }
-    if (!description) {
-      createResult.textContent = 'Bitte Beschreibung eingeben.';
-      createResult.style.color = '#dc2626';
-      return;
-    }
-    if (!category) {
-      createResult.textContent = 'Bitte Kategorie wählen.';
-      createResult.style.color = '#dc2626';
-      return;
-    }
-    
-    createResult.textContent = 'Erstelle...';
-    createResult.style.color = '#1e40af';
-    const res = await window.api.createTicket({ 
-      title, 
-      description, 
-      customer_id: currentUserId, 
-      category, 
-      status: "Offen",
-      assigned_to: assigneeId
+  // Handle form submission instead of button click
+  const ticketForm = document.querySelector('.ticket-creation-form');
+  if (ticketForm) {
+    ticketForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const title = titleInput.value.trim();
+      const description = descInput.value.trim();
+      const category = cateInput.value;
+      // Only allow assignee for Admin and Support
+      const assigneeId = (currentUserRole === ROLE_ADMIN || currentUserRole === ROLE_SUPPORT) 
+        ? (assigneeInput.value || null) 
+        : null;
+      
+      if (!title) {
+        createResult.textContent = 'Bitte Betreff eingeben.';
+        createResult.style.color = '#dc2626';
+        return;
+      }
+      if (!description) {
+        createResult.textContent = 'Bitte Beschreibung eingeben.';
+        createResult.style.color = '#dc2626';
+        return;
+      }
+      if (!category) {
+        createResult.textContent = 'Bitte Kategorie wählen.';
+        createResult.style.color = '#dc2626';
+        return;
+      }
+      
+      createResult.textContent = 'Erstelle...';
+      createResult.style.color = '#1e40af';
+      const res = await window.api.createTicket({ 
+        title, 
+        description, 
+        customer_id: currentUserId, 
+        category, 
+        status: "Offen",
+        assigned_to: assigneeId
+      });
+      if (res.success) {
+        createResult.textContent = 'Ticket erstellt.';
+        createResult.style.color = '#166534';
+        titleInput.value = '';
+        descInput.value = '';
+        cateInput.value = '';
+        assigneeInput.value = '';
+      } else {
+        createResult.textContent = `Fehler: ${res.error}`;
+        createResult.style.color = '#991b1b';
+      }
     });
-    if (res.success) {
-      createResult.textContent = `Ticket erstellt (ID ${res.id}).`;
-      createResult.style.color = '#166534';
-      titleInput.value = '';
-      descInput.value = '';
-      cateInput.value = '';
-      assigneeInput.value = '';
-      setTimeout(() => {
-        loadTickets();
-        // Go back to home view
-        const homeBtn = document.querySelector('[data-action="home"]');
-        if (homeBtn) homeBtn.click();
-      }, 1000);
-    } else {
-      createResult.textContent = `Fehler: ${res.error}`;
-      createResult.style.color = '#991b1b';
-    }
-  });
+  }
 
   if (logoutBtn) {
     logoutBtn.addEventListener('click', () => {

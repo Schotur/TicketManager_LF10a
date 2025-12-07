@@ -112,10 +112,11 @@ async function createTicket(title, description, customer_id, category, status, a
   let conn;
   try {
     conn = await pool.getConnection();
-    await conn.query(
+    const result = await conn.query(
       'INSERT INTO ticket (titel, beschreibung, kategorie_id, erstellt_von, zugewiesen_an, erstellt_am, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
       [title, description, category, customer_id, assigned_to, new Date(), status]
     );
+    return result.insertId;
   } finally {
     if (conn) conn.release();
   }
