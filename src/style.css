@@ -1323,3 +1323,116 @@ body:has(header) .back-link:hover {
     align-items: center;
     width: 100%;
 }
+
+/* Comments Section Styles */
+.comments-section {
+    margin-top: 40px;
+    padding-top: 30px;
+    border-top: 2px solid #e1e4e8;
+}
+
+.comments-section h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #222;
+    margin-bottom: 20px;
+}
+
+/* Comment Input Form */
+.comment-input-form {
+    background: #f9fafb;
+    padding: 16px;
+    border-radius: 8px;
+    margin-bottom: 24px;
+    border: 1px solid #e1e4e8;
+}
+
+.comment-input-form textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 0.95rem;
+    resize: vertical;
+    margin-bottom: 12px;
+    background: white;
+}
+
+.comment-input-form textarea:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.comment-input-form #submitCommentBtn {
+    align-self: flex-end;
+}
+
+/* Comments List */
+.comments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.comment-item {
+    background: #f9fafb;
+    border: 1px solid #e1e4e8;
+    border-radius: 8px;
+    padding: 16px;
+    transition: all 0.2s ease;
+}
+
+.comment-item:hover {
+    border-color: #d1d5db;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.comment-author {
+    font-weight: 600;
+    color: #222;
+    margin-right: 8px;
+}
+
+.comment-meta {
+    font-size: 0.85rem;
+    color: #666;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.comment-role {
+    background: #e0e7ff;
+    color: #3730a3;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.comment-datetime {
+    color: #999;
+    font-size: 0.85rem;
+}
+
+.comment-content {
+    color: #444;
+    line-height: 1.6;
+    word-wrap: break-word;
+}
+
+.comments-list-empty {
+    text-align: center;
+    padding: 32px 16px;
+    color: #999;
+    font-style: italic;
+}

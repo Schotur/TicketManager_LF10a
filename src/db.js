@@ -323,4 +323,40 @@ async function tableExists(tableName) {
   */
 }
 
-module.exports = { getTickets, getAssignedTickets, getTicketsByCreator, getHomeTickets, getTicket, createTicket, updateTicket, getUser, getUserByEmail, getUsers, createUser, updateUser, deleteUser, getRoles, pool, autoSetup };
+// Kommentar erstellen
+async function createComment(ticket_id, benutzer_id, inhalt) {
+  let conn;
+  try {
+    conn = await pool.getConnection();
+    const result = await conn.query(
+      'INSERT INTO kommentar (ticket_id, benutzer_id, inhalt, erstellt_am) VALUES (?, ?, ?, ?)',
+      [ticket_id, benutzer_id, inhalt, new Date()]
+    );
+    return result.insertId;
+  } finally {
+    if (conn) conn.release();
+  }
+}
+
+// Kommentare für ein Ticket holen (mit Benutzer- und Rolleninformationen)
+async function getCommentsByTicket(ticket_id) {
+  let conn;
+  try {
+    conn = await pool.getConnection();
+    const comments = await conn.query(
+      `SELECT k.kommentar_id, k.ticket_id, k.benutzer_id, k.inhalt, k.erstellt_am, 
+              b.vorname, b.nachname, r.name as rolle_name
+       FROM kommentar k
+       JOIN benutzer b ON k.benutzer_id = b.benutzer_id
+       JOIN rolle r ON b.rolle_id = r.rolle_id
+       WHERE k.ticket_id = ?
+       ORDER BY k.erstellt_am DESC`,
+      [ticket_id]
+    );
+    return comments;
+  } finally {
+    if (conn) conn.release();
+  }
+}
+
+module.exports = { getTickets, getAssignedTickets, getTicketsByCreator, getHomeTickets, getTicket, createTicket, updateTicket, getUser, getUserByEmail, getUsers, createUser, updateUser, deleteUser, getRoles, createComment, getCommentsByTicket, pool, autoSetup };

@@ -34,6 +34,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Load ticket data
   await loadTicket(ticketId);
 
+  // Load comments for the ticket
+  await loadComments(ticketId);
+
   // Handle form submission
   if (currentUserRole !== ROLE_USER) {
     form.addEventListener('submit', async (event) => {
@@ -55,6 +58,16 @@ document.addEventListener('DOMContentLoaded', async () => {
       window.location.href = 'login.html';
     });
   }
+
+  // Handle comment submission
+  const submitCommentBtn = document.getElementById('submitCommentBtn');
+  if (submitCommentBtn) {
+    submitCommentBtn.addEventListener('click', async () => {
+      await submitComment(ticketId, userId);
+    });
+  }
+
+  // Allow Enter key to submit comment (Shift+Enter for newline)
 
   async function loadCurrentUser(userId) {
     try {
@@ -254,6 +267,116 @@ document.addEventListener('DOMContentLoaded', async () => {
       messageDiv.textContent = message;
       messageDiv.className = `message ${type}`;
       messageDiv.classList.remove('hidden');
+    }
+  }
+
+  async function loadComments(ticketId) {
+    try {
+      const res = await window.api.getCommentsByTicket(ticketId);
+      
+      if (!res || !res.success) {
+        console.error('Failed to load comments:', res);
+        return;
+      }
+
+      const comments = res.data || [];
+      const commentsList = document.getElementById('commentsList');
+      
+      if (!commentsList) return;
+
+      // Clear existing comments
+      commentsList.innerHTML = '';
+
+      if (comments.length === 0) {
+        commentsList.innerHTML = '<div class="comments-list-empty">Noch keine Kommentare. Seien Sie der Erste!</div>';
+        return;
+      }
+
+      // Render each comment
+      comments.forEach(comment => {
+        const commentEl = createCommentElement(comment);
+        commentsList.appendChild(commentEl);
+      });
+    } catch (error) {
+      console.error('Error loading comments:', error);
+    }
+  }
+
+  function createCommentElement(comment) {
+    const commentDiv = document.createElement('div');
+    commentDiv.className = 'comment-item';
+
+    // Format the date
+    const date = new Date(comment.erstellt_am);
+    const formattedDate = date.toLocaleDateString('de-DE', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+
+    commentDiv.innerHTML = `
+      <div class="comment-header">
+        <div>
+          <span class="comment-author">${comment.vorname} ${comment.nachname}</span>
+          <div class="comment-meta">
+            <span class="comment-role">${comment.rolle_name}</span>
+            <span class="comment-datetime">${formattedDate}</span>
+          </div>
+        </div>
+      </div>
+      <div class="comment-content">${escapeHtml(comment.inhalt)}</div>
+    `;
+
+    return commentDiv;
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  async function submitComment(ticketId, userId) {
+    const commentInput = document.getElementById('commentInput');
+    const commentText = commentInput?.value?.trim();
+
+    if (!commentText) {
+      showMessage('❌ Bitte schreiben Sie einen Kommentar.', 'error');
+      return;
+    }
+
+    try {
+      showMessage('💾 Speichere Kommentar...', 'loading');
+
+      const res = await window.api.createComment({
+        ticket_id: ticketId,
+        benutzer_id: userId,
+        inhalt: commentText
+      });
+
+      if (res.success) {
+        // Clear input
+        commentInput.value = '';
+        showMessage('✅ Kommentar erfolgreich hinzugefügt.', 'success');
+        
+        // Reload comments
+        await loadComments(ticketId);
+        
+        // Hide message after 2 seconds
+        setTimeout(() => {
+          const messageDiv = document.getElementById('message');
+          if (messageDiv) {
+            messageDiv.classList.add('hidden');
+          }
+        }, 2000);
+      } else {
+        showMessage(`❌ Fehler: ${res.error}`, 'error');
+      }
+    } catch (error) {
+      console.error('Error submitting comment:', error);
+      showMessage('❌ Fehler beim Hinzufügen des Kommentars.', 'error');
     }
   }
 });

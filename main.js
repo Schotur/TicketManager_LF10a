@@ -94,10 +94,21 @@ ipcMain.handle('tickets:create', async (event, ticket) => {
 // Kommentar anlegen
 ipcMain.handle('comments:create', async (event, comment) => {
   try {
-    const id = await db.createComment(comment.ticket_id, comment.author_id, comment.message);
+    const id = await db.createComment(comment.ticket_id, comment.benutzer_id, comment.inhalt);
     return { success: true, id };
   } catch (err) {
     console.error('DB createComment error', err);
+    return { success: false, error: err.message };
+  }
+});
+
+// Kommentare für ein Ticket holen
+ipcMain.handle('comments:getByTicket', async (event, ticket_id) => {
+  try {
+    const comments = await db.getCommentsByTicket(ticket_id);
+    return { success: true, data: comments };
+  } catch (err) {
+    console.error('DB getCommentsByTicket error', err);
     return { success: false, error: err.message };
   }
 });
