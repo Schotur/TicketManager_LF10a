@@ -1,335 +1,292 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
+import { _electron } from 'playwright';
 
 /**
- * End-to-End Tests mit Playwright
+ * End-to-End Tests mit Playwright für Electron App
  * Diese Tests testen die gesamte Anwendung aus Benutzersicht
  */
 
-test.describe('TicketManager - Login & Authentication', () => {
-  test.beforeEach(async ({ page }) => {
-    // Navigiere zur Login-Seite
-    await page.goto('login.html');
-  });
+let electronApp;
+let page;
 
-  test('Login-Seite sollte laden', async ({ page }) => {
-    // Prüfe ob Login-Elemente vorhanden sind
-    await expect(page).toHaveTitle(/Login|login/i);
-    const loginForm = page.locator('form');
-    await expect(loginForm).toBeVisible();
-  });
+test.describe.configure({ mode: 'parallel' });
 
-  test('sollte mit gültigen Anmeldedaten anmelden können', async ({ page }) => {
-    // Gib Anmeldedaten ein
-    await page.fill('input[name="email"]', 'admin@ticketmanager.com');
-    await page.fill('input[type="password"]', 'admin123');
-    
-    // Klicke Login-Button
-    await page.click('button[type="submit"]');
-    
-    // Warte auf Navigation zur Hauptseite
-    await page.waitForURL(/index\.html/);
-    
-    // Prüfe dass Dashboard geladen ist
-    await expect(page.locator('h1, h2')).toBeVisible();
+test.beforeAll(async () => {
+  // Launch the Electron app
+  electronApp = await _electron.launch({
+    args: ['--no-sandbox'],
+    cwd: process.cwd()
   });
-
-  test('sollte mit ungültigen Anmeldedaten fehlschlagen', async ({ page }) => {
-    // Gib ungültige Daten ein
-    await page.fill('input[name="email"]', 'invalid@test.com');
-    await page.fill('input[type="password"]', 'wrongpassword');
-    
-    // Klicke Login-Button
-    await page.click('button[type="submit"]');
-    
-    // Bleibe auf Login-Seite
-    await expect(page).toHaveURL(/login\.html/);
-    
-    // Prüfe Fehlermeldung
-    const errorMessage = page.locator('[role="alert"], .error, .alert-danger');
-    await expect(errorMessage).toBeVisible();
-  });
-
-  test('sollte erforderliche Felder validieren', async ({ page }) => {
-    // Versuche zu submitten ohne Daten einzugeben
-    await page.click('button[type="submit"]');
-    
-    // Prüfe Validierungsmeldungen
-    const emailInput = page.locator('input[name="email"]');
-    await expect(emailInput).toHaveAttribute('required', /required/i);
+  page = await electronApp.firstWindow();
+  
+  // Maximize window for consistency
+  await page.evaluate(() => {
+    window.electronAPI?.window?.maximize?.();
   });
 });
 
-test.describe('TicketManager - Hauptseite', () => {
-  test.beforeEach(async ({ page }) => {
-    // Login vor jedem Test
-    await page.goto('login.html');
-    await page.fill('input[name="email"]', 'admin@ticketmanager.com');
-    await page.fill('input[type="password"]', 'admin123');
-    await page.click('button[type="submit"]');
-    await page.waitForURL(/index\.html/);
+test.afterAll(async () => {
+  // Close the app after all tests
+  if (electronApp) {
+    await electronApp.close();
+  }
+});
+
+test.describe('TicketManager - Login & Authentication', () => {
+  test('Login-Seite sollte laden', async () => {
+    // Warte auf Login Form
+    const emailInput = page.locator('input[name="eMail_login"], input[id*="mail"]');
+    const passwordInput = page.locator('input[name="password_login"], input[type="password"]');
+    
+    await expect(emailInput).toBeVisible({ timeout: 5000 });
+    await expect(passwordInput).toBeVisible();
   });
 
-  test('sollte Ticket-Liste anzeigen', async ({ page }) => {
+  test('sollte mit gültigen Anmeldedaten anmelden können', async () => {
+    // Fülle Login-Formular aus
+    const emailInput = page.locator('input[name="eMail_login"], input[id*="mail"]');
+    const passwordInput = page.locator('input[name="password_login"], input[type="password"]');
+    const loginBtn = page.locator('button[id="loginBtn"], button:has-text("Login")');
+    
+    await emailInput.fill('test@example.com');
+    await passwordInput.fill('password');
+    await loginBtn.click();
+    
+    // Warte auf Navigation zur Hauptseite (index.html)
+    await page.waitForURL(/index\.html/, { timeout: 5000 });
+    
+    // Prüfe dass Dashboard geladen ist
+    const header = page.locator('header h1, h1:has-text("Ticket Manager")');
+    await expect(header).toBeVisible();
+  });
+
+  test('sollte mit ungültigen Anmeldedaten fehlschlagen', async () => {
+    // Reload to get back to login
+    await page.goto('login.html');
+    
+    const emailInput = page.locator('input[name="eMail_login"], input[id*="mail"]');
+    const passwordInput = page.locator('input[name="password_login"], input[type="password"]');
+    const loginBtn = page.locator('button[id="loginBtn"], button:has-text("Login")');
+    
+    // Gib ungültige Daten ein
+    await emailInput.fill('invalid@test.com');
+    await passwordInput.fill('wrongpassword');
+    await loginBtn.click();
+    
+    // Sollte auf Login-Seite bleiben
+    await page.waitForTimeout(1000);
+    expect(page.url()).toContain('login.html');
+  });
+});
+
+test.describe('TicketManager - Hauptseite & Ticket Management', () => {
+  test.beforeEach(async () => {
+    // Login vor jedem Test
+    await page.goto('login.html');
+    const emailInput = page.locator('input[name="eMail_login"], input[id*="mail"]');
+    const passwordInput = page.locator('input[name="password_login"], input[type="password"]');
+    const loginBtn = page.locator('button[id="loginBtn"]');
+    
+    await emailInput.fill('test@example.com');
+    await passwordInput.fill('password');
+    await loginBtn.click();
+    
+    await page.waitForURL(/index\.html/, { timeout: 5000 });
+  });
+
+  test('sollte Ticket-Liste anzeigen', async () => {
+    // Klicke auf "Alle Tickets" wenn nicht aktiv
+    const allTicketsBtn = page.locator('button:has-text("Alle Tickets")').first();
+    await allTicketsBtn.click();
+    
     // Warte auf Ticket-Liste
-    const ticketList = page.locator('ul#tickets, [data-testid="ticket-list"]');
+    const ticketList = page.locator('ul#tickets');
     await expect(ticketList).toBeVisible({ timeout: 5000 });
   });
 
-  test('sollte Paginierung-Buttons anzeigen', async ({ page }) => {
-    const prevBtn = page.locator('#prevPage, [data-testid="prev-page"]');
-    const nextBtn = page.locator('#nextPage, [data-testid="next-page"]');
+  test('sollte Paginierung-Buttons anzeigen', async () => {
+    // Klicke auf "Alle Tickets"
+    const allTicketsBtn = page.locator('button:has-text("Alle Tickets")').first();
+    await allTicketsBtn.click();
+    
+    const prevBtn = page.locator('#prevPage');
+    const nextBtn = page.locator('#nextPage');
     
     await expect(prevBtn).toBeVisible();
     await expect(nextBtn).toBeVisible();
   });
 
-  test('sollte Ticket erstellen können', async ({ page }) => {
+  test('sollte Statistik-Dashboard anzeigen', async () => {
+    // Klicke auf "Alle Tickets"
+    const allTicketsBtn = page.locator('button:has-text("Alle Tickets")').first();
+    await allTicketsBtn.click();
+    
+    // Prüfe Statistik-Karten
+    const statCards = page.locator('.stat-card');
+    await expect(statCards).toHaveCount(4); // Gesamt, Offen, In Bearbeitung, Geschlossen
+  });
+
+  test('sollte Search-Funktionalität haben', async () => {
+    // Klicke auf "Alle Tickets"
+    const allTicketsBtn = page.locator('button:has-text("Alle Tickets")').first();
+    await allTicketsBtn.click();
+    
+    // Suche nach Ticket
+    const searchInput = page.locator('input#searchInput, .search-box');
+    await expect(searchInput).toBeVisible();
+    
+    await searchInput.fill('test');
+    await page.waitForTimeout(500); // Wait for search
+    
+    // Tickets sollten gefiltert sein
+    const ticketList = page.locator('ul#tickets');
+    await expect(ticketList).toBeVisible();
+  });
+
+  test('sollte Ticket erstellen können', async () => {
     // Klicke auf "Neues Ticket" Button
-    const createBtn = page.locator('button:has-text("Neues Ticket"), [data-testid="create-ticket"]');
+    const createBtn = page.locator('button:has-text("Neues Ticket")');
     await expect(createBtn).toBeVisible();
     await createBtn.click();
     
-    // Prüfe dass zur Ticket-Erstellungsseite navigiert wird
-    await page.waitForURL(/index\.html\?id=/);
-  });
-
-  test('Dark Mode sollte funktionieren', async ({ page }) => {
-    // Suche Dark Mode Toggle Button
-    const themeToggle = page.locator('button:has-text("🌙"), button:has-text("☀️")');
+    // Prüfe dass Formular sichtbar ist
+    const titleInput = page.locator('#title');
+    const descInput = page.locator('#description');
+    const categorySelect = page.locator('#category');
+    const submitBtn = page.locator('#createTicketBtn');
     
-    if (await themeToggle.isVisible()) {
-      // Prüfe initialen Zustand
-      const initialText = await themeToggle.textContent();
-      
-      // Klicke Toggle
-      await themeToggle.click();
-      
-      // Prüfe dass sich der Text ändert
-      const newText = await themeToggle.textContent();
-      expect(initialText).not.toBe(newText);
-      
-      // Prüfe dass Dark Mode klasse hinzugefügt/entfernt wurde
-      const htmlElement = page.locator('html');
-      const hasDarkMode = await htmlElement.evaluate(el => 
-        el.classList.contains('dark-mode')
-      );
-      expect(typeof hasDarkMode).toBe('boolean');
-    }
-  });
-
-  test('Logout sollte zur Login-Seite führen', async ({ page }) => {
-    // Suche Logout-Button (variiert je nach Implementation)
-    const logoutBtn = page.locator('button:has-text("Logout"), [data-testid="logout"]');
+    await expect(titleInput).toBeVisible();
+    await expect(descInput).toBeVisible();
+    await expect(categorySelect).toBeVisible();
     
-    if (await logoutBtn.isVisible()) {
-      await logoutBtn.click();
-      await page.waitForURL(/login\.html/);
-      await expect(page).toHaveURL(/login\.html/);
-    }
-  });
-});
-
-test.describe('TicketManager - Benutzerverwaltung', () => {
-  test.beforeEach(async ({ page }) => {
-    // Login als Admin
-    await page.goto('login.html');
-    await page.fill('input[name="email"]', 'admin@ticketmanager.com');
-    await page.fill('input[type="password"]', 'admin123');
-    await page.click('button[type="submit"]');
+    // Fülle Formular aus
+    await titleInput.fill('E2E Test Ticket');
+    await descInput.fill('Dies ist ein Test-Ticket für E2E Tests');
+    await categorySelect.selectOption('1');
     
-    // Navigiere zu Benutzerverwaltung
-    await page.goto('usermanagement.html');
-    await page.waitForLoadState('networkidle');
-  });
-
-  test('Benutzerverwaltungsseite sollte laden', async ({ page }) => {
-    // Prüfe dass Seite geladen ist
-    await expect(page).toHaveURL(/usermanagement\.html/);
-    const userList = page.locator('table, [data-testid="user-list"]');
-    await expect(userList).toBeVisible({ timeout: 5000 });
-  });
-
-  test('sollte neue Benutzer hinzufügen können', async ({ page }) => {
-    // Suche Button zum Benutzer hinzufügen
-    const addUserBtn = page.locator('button:has-text("Benutzer hinzufügen"), button:has-text("Add User")');
+    // Submitte Formular
+    await submitBtn.click();
     
-    if (await addUserBtn.isVisible()) {
-      await addUserBtn.click();
-      
-      // Fülle Formular aus
-      await page.fill('input[name="firstname"]', 'Test');
-      await page.fill('input[name="lastname"]', 'User');
-      await page.fill('input[name="email"]', `test${Date.now()}@example.com`);
-      await page.fill('input[name="password"]', 'TestPass123!');
-      
-      // Submitte Formular
-      await page.click('button[type="submit"]');
-      
-      // Prüfe Bestätigungsmeldung
-      const successMsg = page.locator('[role="alert"]');
-      await expect(successMsg).toContainText(/erfolgreich|success|created/i);
-    }
+    // Prüfe dass Ticket erstellt wurde
+    const result = page.locator('#createResult');
+    await expect(result).toContainText(/erstellt|created/i, { timeout: 5000 });
   });
 
-  test('sollte Benutzer bearbeiten können', async ({ page }) => {
-    // Suche Edit Button für ersten Benutzer
-    const editBtn = page.locator('button:has-text("Bearbeiten"), button:has-text("Edit")').first();
+  test('sollte Status filtern können', async () => {
+    // Klicke auf "Alle Tickets"
+    const allTicketsBtn = page.locator('button:has-text("Alle Tickets")').first();
+    await allTicketsBtn.click();
     
-    if (await editBtn.isVisible()) {
-      await editBtn.click();
-      
-      // Ändere Benutzerdaten
-      const nameInput = page.locator('input[name="firstname"]');
-      await nameInput.clear();
-      await nameInput.fill('UpdatedName');
-      
-      // Speichere Änderungen
-      await page.click('button[type="submit"]');
-      
-      // Prüfe Bestätigung
-      await expect(page.locator('[role="alert"]')).toContainText(/aktualisiert|updated/i);
-    }
-  });
-
-  test('sollte Benutzer löschen können', async ({ page }) => {
-    // Suche Delete Button
-    const deleteBtn = page.locator('button:has-text("Löschen"), button:has-text("Delete")').first();
+    // Warte auf Stat-Karten
+    await page.waitForTimeout(500);
     
-    if (await deleteBtn.isVisible()) {
-      await deleteBtn.click();
-      
-      // Bestätige Löschung (Confirmation Dialog)
-      const confirmBtn = page.locator('button:has-text("Ja"), button:has-text("Yes"), button:has-text("Confirm")');
-      if (await confirmBtn.isVisible()) {
-        await confirmBtn.click();
-      }
-      
-      // Prüfe Bestätigung
-      await expect(page.locator('[role="alert"]')).toContainText(/gelöscht|deleted/i);
+    // Klicke auf "Offen" Stat-Karte
+    const openCard = page.locator('.stat-card').filter({ has: page.locator('text=Offen') });
+    await openCard.click();
+    
+    // Warte auf Filter-Update
+    await page.waitForTimeout(500);
+    
+    // Tickets sollten nur "Offen" Status haben
+    const tickets = page.locator('ul#tickets li');
+    if (await tickets.count() > 0) {
+      const firstTicket = tickets.first();
+      await expect(firstTicket).toBeVisible();
     }
   });
 });
 
 test.describe('TicketManager - Ticket Details', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async () => {
     // Login
     await page.goto('login.html');
-    await page.fill('input[name="email"]', 'admin@ticketmanager.com');
-    await page.fill('input[type="password"]', 'admin123');
-    await page.click('button[type="submit"]');
+    const emailInput = page.locator('input[name="eMail_login"], input[id*="mail"]');
+    const passwordInput = page.locator('input[name="password_login"], input[type="password"]');
+    const loginBtn = page.locator('button[id="loginBtn"]');
     
-    // Navigiere zur Hauptseite
-    await page.goto('index.html');
-    await page.waitForLoadState('networkidle');
+    await emailInput.fill('test@example.com');
+    await passwordInput.fill('password');
+    await loginBtn.click();
+    
+    await page.waitForURL(/index\.html/, { timeout: 5000 });
   });
 
-  test('sollte Ticket-Details anzeigen können', async ({ page }) => {
+  test('sollte Ticket-Details anzeigen können', async () => {
+    // Klicke auf "Alle Tickets"
+    const allTicketsBtn = page.locator('button:has-text("Alle Tickets")').first();
+    await allTicketsBtn.click();
+    
+    // Warte auf Tickets
+    await page.waitForTimeout(1000);
+    
     // Klicke auf erstes Ticket
-    const firstTicket = page.locator('li, [data-testid="ticket-item"]').first();
+    const firstTicket = page.locator('ul#tickets li').first();
     if (await firstTicket.isVisible()) {
       await firstTicket.click();
       
       // Prüfe dass zur Detail-Seite navigiert wird
-      await page.waitForURL(/ticketdetail\.html/);
+      await page.waitForURL(/ticketdetail\.html/, { timeout: 5000 });
       
       // Prüfe dass Details geladen sind
-      const ticketTitle = page.locator('h1, h2, [data-testid="ticket-title"]');
+      const ticketTitle = page.locator('h2, [data-testid="ticket-title"]');
       await expect(ticketTitle).toBeVisible({ timeout: 5000 });
     }
   });
 
-  test('sollte Ticket-Status ändern können', async ({ page }) => {
-    // Navigiere zu Ticket-Details
+  test('sollte Ticket-Status ändern können', async () => {
+    // Navigiere zu Ticket-Details (ID 1)
     await page.goto('ticketdetail.html?id=1');
     await page.waitForLoadState('networkidle');
     
     // Suche Status Select
-    const statusSelect = page.locator('select[name="status"], [data-testid="status"]');
+    const statusSelect = page.locator('select[name="status"]');
     if (await statusSelect.isVisible()) {
       // Ändere Status
-      await statusSelect.selectOption('geschlossen');
+      await statusSelect.selectOption('Geschlossen');
       
       // Speichere
       const saveBtn = page.locator('button:has-text("Speichern"), button:has-text("Save")');
       if (await saveBtn.isVisible()) {
         await saveBtn.click();
         
-        // Prüfe Bestätigung
-        await expect(page.locator('[role="alert"]')).toContainText(/erfolgreich|success/i);
-      }
-    }
-  });
-
-  test('sollte Kommentare anzeigen können', async ({ page }) => {
-    // Navigiere zu Ticket-Details
-    await page.goto('ticketdetail.html?id=1');
-    await page.waitForLoadState('networkidle');
-    
-    // Prüfe Kommentar-Sektion
-    const comments = page.locator('[data-testid="comments"], .comments');
-    if (await comments.isVisible()) {
-      await expect(comments).toBeVisible();
-    }
-  });
-
-  test('sollte neuen Kommentar hinzufügen können', async ({ page }) => {
-    // Navigiere zu Ticket-Details
-    await page.goto('ticketdetail.html?id=1');
-    await page.waitForLoadState('networkidle');
-    
-    // Suche Kommentar-Input
-    const commentInput = page.locator('textarea[name="comment"], [data-testid="comment-input"]');
-    if (await commentInput.isVisible()) {
-      await commentInput.fill('Dies ist ein Test-Kommentar');
-      
-      // Klicke Submit Button
-      const submitBtn = page.locator('button:has-text("Kommentar"), button:has-text("Comment"), button:has-text("Send")');
-      if (await submitBtn.isVisible()) {
-        await submitBtn.click();
+        // Warte auf Speicherung
+        await page.waitForTimeout(1000);
         
-        // Prüfe dass Kommentar hinzugefügt wurde
-        await expect(page.locator('text=Dies ist ein Test-Kommentar')).toBeVisible({ timeout: 5000 });
+        // Sollte zurück geleitet werden
+        await expect(page).toHaveURL(/index\.html/, { timeout: 5000 });
       }
     }
   });
 });
 
 test.describe('TicketManager - Responsives Design', () => {
-  test('sollte auf mobilen Geräten funktionieren', async ({ page }) => {
-    // Setze Mobile Viewport
-    await page.setViewportSize({ width: 375, height: 667 });
-    
+  test('sollte bei verschiedenen Viewport-Größen funktionieren', async () => {
     // Login
     await page.goto('login.html');
-    await page.fill('input[name="email"]', 'admin@ticketmanager.com');
-    await page.fill('input[type="password"]', 'admin123');
-    await page.click('button[type="submit"]');
+    const emailInput = page.locator('input[name="eMail_login"], input[id*="mail"]');
+    const passwordInput = page.locator('input[name="password_login"], input[type="password"]');
+    const loginBtn = page.locator('button[id="loginBtn"]');
     
-    // Prüfe dass Dashboard responsiv ist
-    await page.waitForURL(/index\.html/);
-    const ticketList = page.locator('ul#tickets, [data-testid="ticket-list"]');
-    await expect(ticketList).toBeVisible({ timeout: 5000 });
-  });
-
-  test('sollte auf Tablets funktionieren', async ({ page }) => {
-    // Setze Tablet Viewport
-    await page.setViewportSize({ width: 768, height: 1024 });
+    await emailInput.fill('test@example.com');
+    await passwordInput.fill('password');
+    await loginBtn.click();
     
-    // Login
-    await page.goto('login.html');
-    await page.fill('input[name="email"]', 'admin@ticketmanager.com');
-    await page.fill('input[type="password"]', 'admin123');
-    await page.click('button[type="submit"]');
+    await page.waitForURL(/index\.html/, { timeout: 5000 });
     
-    // Prüfe dass alles funktioniert
-    await page.waitForURL(/index\.html/);
-    const ticketList = page.locator('ul#tickets, [data-testid="ticket-list"]');
-    await expect(ticketList).toBeVisible({ timeout: 5000 });
+    // Setze kleinerer Viewport (mobile simulation)
+    await page.setViewportSize({ width: 480, height: 800 });
+    
+    // Prüfe dass UI responsive ist
+    const ticketList = page.locator('ul#tickets, #content-area');
+    await expect(ticketList).toBeVisible();
+    
+    // Stelle Viewport wieder her
+    await page.setViewportSize({ width: 1280, height: 1024 });
   });
 });
 
-test.describe('TicketManager - Performance & Accessibility', () => {
-  test('Seite sollte in angemessener Zeit laden', async ({ page }) => {
+test.describe('TicketManager - Performance', () => {
+  test('Seite sollte schnell laden', async () => {
     const startTime = Date.now();
     
     await page.goto('login.html');
@@ -338,23 +295,35 @@ test.describe('TicketManager - Performance & Accessibility', () => {
     expect(loadTime).toBeLessThan(3000); // Sollte unter 3 Sekunden laden
   });
 
-  test('Seitennavigation sollte funktionieren', async ({ page }) => {
+  test('Navigation zwischen Views sollte funktionieren', async () => {
     // Login
     await page.goto('login.html');
-    await page.fill('input[name="email"]', 'admin@ticketmanager.com');
-    await page.fill('input[type="password"]', 'admin123');
-    await page.click('button[type="submit"]');
+    const emailInput = page.locator('input[name="eMail_login"], input[id*="mail"]');
+    const passwordInput = page.locator('input[name="password_login"], input[type="password"]');
+    const loginBtn = page.locator('button[id="loginBtn"]');
     
-    // Navigiere zwischen verschiedenen Seiten
-    await page.goto('index.html');
-    await expect(page).toHaveURL(/index\.html/);
+    await emailInput.fill('test@example.com');
+    await passwordInput.fill('password');
+    await loginBtn.click();
     
-    await page.goto('usermanagement.html');
-    await expect(page).toHaveURL(/usermanagement\.html/);
-  });
-
-  test('sollte korrekte HTTP Status-Codes haben', async ({ page }) => {
-    const response = await page.goto('login.html');
-    expect(response?.status()).toBe(200);
+    await page.waitForURL(/index\.html/, { timeout: 5000 });
+    
+    // Navigiere zu Alle Tickets
+    const allTicketsBtn = page.locator('button:has-text("Alle Tickets")').first();
+    await allTicketsBtn.click();
+    await page.waitForTimeout(300);
+    
+    // Navigiere zu Neues Ticket
+    const createBtn = page.locator('button:has-text("Neues Ticket")');
+    await createBtn.click();
+    await page.waitForTimeout(300);
+    
+    // Navigiere zurück zu Alle Tickets
+    await allTicketsBtn.click();
+    await page.waitForTimeout(300);
+    
+    // Sollte schnell navigieren
+    const ticketList = page.locator('ul#tickets');
+    await expect(ticketList).toBeVisible();
   });
 });

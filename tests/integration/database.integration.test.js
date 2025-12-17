@@ -1,204 +1,403 @@
 const { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } = require('@jest/globals');
 const fs = require('fs');
 const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '../../.env') });
+
+const db = require('../../src/db');
 
 /**
  * Integration Tests für Datenbank-Operationen
- * Diese Tests verwenden eine echte SQLite Datenbank (oder in-memory)
+ * Diese Tests verwenden eine echte MariaDB Datenbank
  */
 
-// Wir verwenden better-sqlite3 oder ein echtes Testszenario
-// Für dieses Projekt könnte auch eine Test-MariaDB-Instanz verwendet werden
-
 describe('Database Integration Tests', () => {
-  let testDb;
+  let testData = {};
 
   beforeAll(async () => {
-    // In der echten Umgebung würde hier eine Test-Datenbank initialisiert
-    // Für Demo-Zwecke zeigen wir die Struktur
-    console.log('Integration Tests Setup');
+    // Initialize the database pool
+    db.initPool();
+    console.log('Integration Tests Setup - Pool initialized');
   });
 
   afterAll(async () => {
-    // Cleanup nach allen Tests
-    console.log('Integration Tests Cleanup');
+    // Close the pool after all tests
+    await db.closePool();
+    console.log('Integration Tests Cleanup - Pool closed');
   });
 
   describe('Ticket Operationen', () => {
     beforeEach(async () => {
-      // Vor jedem Test: Setup von Test-Daten
-      console.log('Preparing test data');
+      // Create a fresh user for each test
+      testData.userId = await db.createUser(
+        'TestUser',
+        'IntegrationTest' + Date.now(),
+        'testuser' + Date.now() + '@test.com',
+        'TestPass123',
+        3
+      );
     });
 
     afterEach(async () => {
-      // Nach jedem Test: Cleanup
-      console.log('Cleaning up test data');
+      // Cleanup test data
+      testData = {};
     });
 
     it('sollte ein Ticket erstellen und abrufen können', async () => {
-      // Pseudocode für echte DB-Integration
-      // const ticketId = await createTicket('Test Ticket', 'Beschreibung', 1, 1, 'offen');
-      // const ticket = await getTicket(ticketId);
-      // expect(ticket.titel).toBe('Test Ticket');
-      expect(true).toBe(true);
+      const ticketId = await db.createTicket(
+        'Integration Test Ticket',
+        'Test Description',
+        testData.userId,
+        1,
+        'Offen'
+      );
+      expect(ticketId).toBeGreaterThan(0);
+
+      const ticket = await db.getTicket(ticketId);
+      expect(ticket).toBeDefined();
+      expect(ticket.titel).toBe('Integration Test Ticket');
+      expect(ticket.beschreibung).toBe('Test Description');
+      expect(ticket.status).toBe('Offen');
     });
 
     it('sollte ein Ticket aktualisieren können', async () => {
-      // const ticketId = await createTicket('Old Title', 'Description', 1, 1, 'offen');
-      // await updateTicket(ticketId, { titel: 'New Title' });
-      // const ticket = await getTicket(ticketId);
-      // expect(ticket.titel).toBe('New Title');
-      expect(true).toBe(true);
+      const ticketId = await db.createTicket(
+        'Original Title',
+        'Original Description',
+        testData.userId,
+        1,
+        'Offen'
+      );
+
+      await db.updateTicket(ticketId, {
+        titel: 'Updated Title',
+        beschreibung: 'Updated Description',
+        status: 'In Bearbeitung'
+      });
+
+      const ticket = await db.getTicket(ticketId);
+      expect(ticket.titel).toBe('Updated Title');
+      expect(ticket.beschreibung).toBe('Updated Description');
+      expect(ticket.status).toBe('In Bearbeitung');
     });
 
     it('sollte ein Ticket löschen können', async () => {
-      // const ticketId = await createTicket('Test Ticket', 'Desc', 1, 1, 'offen');
-      // await deleteTicket(ticketId);
-      // const ticket = await getTicket(ticketId);
-      // expect(ticket).toBeNull();
-      expect(true).toBe(true);
+      const ticketId = await db.createTicket(
+        'To Delete',
+        'This will be deleted',
+        testData.userId,
+        1,
+        'Offen'
+      );
+
+      await db.deleteTicket(ticketId);
+      const ticket = await db.getTicket(ticketId);
+      expect(ticket).toBeUndefined();
     });
 
     it('sollte Tickets nach Ersteller filtern können', async () => {
-      // const ticket1 = await createTicket('Ticket 1', 'Desc', 1, 1, 'offen');
-      // const ticket2 = await createTicket('Ticket 2', 'Desc', 2, 1, 'offen');
-      // const userTickets = await getTicketsByCreator(1);
-      // expect(userTickets).toHaveLength(1);
-      // expect(userTickets[0].ticket_id).toBe(ticket1);
-      expect(true).toBe(true);
+      const ticket1Id = await db.createTicket(
+        'User Ticket 1',
+        'Desc 1',
+        testData.userId,
+        1,
+        'Offen'
+      );
+      const ticket2Id = await db.createTicket(
+        'User Ticket 2',
+        'Desc 2',
+        testData.userId,
+        1,
+        'Offen'
+      );
+
+      const userTickets = await db.getTicketsByCreator(testData.userId);
+      const foundTickets = userTickets.filter(t => t.ticket_id === ticket1Id || t.ticket_id === ticket2Id);
+      expect(foundTickets.length).toBeGreaterThanOrEqual(2);
     });
 
     it('sollte Tickets nach zugewiesen_an filtern können', async () => {
-      // const ticket1 = await createTicket('Ticket 1', 'Desc', 1, 1, 'offen', 2);
-      // const ticket2 = await createTicket('Ticket 2', 'Desc', 1, 1, 'offen', 3);
-      // const assignedTickets = await getAssignedTickets(2);
-      // expect(assignedTickets).toHaveLength(1);
-      // expect(assignedTickets[0].zugewiesen_an).toBe(2);
-      expect(true).toBe(true);
+      const assignedUserId = await db.createUser(
+        'AssignedUser',
+        'Test' + Date.now(),
+        'assigned' + Date.now() + '@test.com',
+        'Pass123',
+        3
+      );
+
+      const ticketId = await db.createTicket(
+        'Assigned Ticket',
+        'Assigned to user',
+        testData.userId,
+        1,
+        'Offen',
+        assignedUserId
+      );
+
+      const assignedTickets = await db.getAssignedTickets(assignedUserId);
+      const found = assignedTickets.find(t => t.ticket_id === ticketId);
+      expect(found).toBeDefined();
+      expect(found.zugewiesen_an).toBe(assignedUserId);
     });
   });
 
   describe('Benutzer Operationen', () => {
     it('sollte einen Benutzer erstellen und abrufen können', async () => {
-      // const userId = await createUser('Max', 'Mustermann', 'max@test.com', 'hash', 3);
-      // const user = await getUser(userId);
-      // expect(user.email).toBe('max@test.com');
-      expect(true).toBe(true);
+      const email = 'integration' + Date.now() + '@test.com';
+      const userId = await db.createUser(
+        'Max',
+        'Mustermann',
+        email,
+        'TestPassword123',
+        3
+      );
+      expect(userId).toBeGreaterThan(0);
+
+      const user = await db.getUser(userId);
+      expect(user).toBeDefined();
+      expect(user.email).toBe(email);
+      expect(user.vorname).toBe('Max');
     });
 
     it('sollte einen Benutzer nach Email finden können', async () => {
-      // await createUser('Anna', 'Schmidt', 'anna@test.com', 'hash', 2);
-      // const user = await getUserByEmail('anna@test.com');
-      // expect(user.vorname).toBe('Anna');
-      expect(true).toBe(true);
+      const email = 'findme' + Date.now() + '@test.com';
+      const userId = await db.createUser(
+        'Anna',
+        'Schmidt',
+        email,
+        'TestPassword123',
+        2
+      );
+
+      const result = await db.getUserByEmail(email);
+      expect(result.success).toBe(true);
+      expect(result.user).toBeDefined();
+      expect(result.user.vorname).toBe('Anna');
     });
 
     it('sollte einen Benutzer aktualisieren können', async () => {
-      // const userId = await createUser('Max', 'Mustermann', 'max@test.com', 'hash', 3);
-      // await updateUser(userId, 'Maxim', 'Mustermann', 'max@test.com', 'hash', 3, true);
-      // const user = await getUser(userId);
-      // expect(user.vorname).toBe('Maxim');
-      expect(true).toBe(true);
-    });
+      const email = 'update' + Date.now() + '@test.com';
+      const userId = await db.createUser(
+        'Max',
+        'Mustermann',
+        email,
+        'TestPassword123',
+        3
+      );
 
-    it('sollte einen Benutzer löschen können', async () => {
-      // const userId = await createUser('Max', 'Mustermann', 'max@test.com', 'hash', 3);
-      // await deleteUser(userId);
-      // const user = await getUser(userId);
-      // expect(user).toBeNull();
-      expect(true).toBe(true);
+      await db.updateUser(userId, {
+        vorname: 'Maxim',
+        nachname: 'NewName'
+      });
+
+      const user = await db.getUser(userId);
+      expect(user.vorname).toBe('Maxim');
+      expect(user.nachname).toBe('NewName');
     });
 
     it('sollte alle Benutzer abrufen können', async () => {
-      // const users = await getUsers();
-      // expect(Array.isArray(users)).toBe(true);
-      // expect(users.length).toBeGreaterThan(0);
-      expect(true).toBe(true);
+      const users = await db.getUsers();
+      expect(Array.isArray(users)).toBe(true);
+      expect(users.length).toBeGreaterThan(0);
+
+      // Verify user structure
+      users.forEach(user => {
+        expect(user).toHaveProperty('benutzer_id');
+        expect(user).toHaveProperty('email');
+      });
     });
   });
 
   describe('Kommentar Operationen', () => {
+    let testTicketId;
+    let testUserId;
+
+    beforeEach(async () => {
+      testUserId = await db.createUser(
+        'CommentUser',
+        'Test' + Date.now(),
+        'comment' + Date.now() + '@test.com',
+        'Pass123',
+        3
+      );
+      testTicketId = await db.createTicket(
+        'Comment Test Ticket',
+        'For comments',
+        testUserId,
+        1,
+        'Offen'
+      );
+    });
+
     it('sollte einen Kommentar erstellen können', async () => {
-      // const ticketId = await createTicket('Test', 'Desc', 1, 1, 'offen');
-      // const commentId = await createComment(ticketId, 1, 'Test Kommentar');
-      // expect(commentId).toBeDefined();
-      expect(true).toBe(true);
+      const commentId = await db.createComment(
+        testTicketId,
+        testUserId,
+        'Test Kommentar ' + Date.now()
+      );
+      expect(typeof commentId).toBe('number');
+      expect(commentId).toBeGreaterThan(0);
     });
 
     it('sollte Kommentare für ein Ticket abrufen können', async () => {
-      // const ticketId = await createTicket('Test', 'Desc', 1, 1, 'offen');
-      // await createComment(ticketId, 1, 'Kommentar 1');
-      // await createComment(ticketId, 2, 'Kommentar 2');
-      // const comments = await getCommentsByTicket(ticketId);
-      // expect(comments).toHaveLength(2);
-      expect(true).toBe(true);
+      await db.createComment(testTicketId, testUserId, 'Kommentar 1');
+      await db.createComment(testTicketId, testUserId, 'Kommentar 2');
+
+      const comments = await db.getCommentsByTicket(testTicketId);
+      expect(Array.isArray(comments)).toBe(true);
+      expect(comments.length).toBeGreaterThanOrEqual(2);
+
+      comments.forEach(comment => {
+        expect(comment.ticket_id).toBe(testTicketId);
+      });
     });
 
     it('sollte Kommentare mit Benutzerinformationen abrufen', async () => {
-      // const ticketId = await createTicket('Test', 'Desc', 1, 1, 'offen');
-      // await createComment(ticketId, 1, 'Test Kommentar');
-      // const comments = await getCommentsByTicket(ticketId);
-      // expect(comments[0].vorname).toBeDefined();
-      // expect(comments[0].rolle_name).toBeDefined();
-      expect(true).toBe(true);
+      await db.createComment(testTicketId, testUserId, 'Test Kommentar mit Info');
+      const comments = await db.getCommentsByTicket(testTicketId);
+
+      expect(comments.length).toBeGreaterThan(0);
+      const comment = comments[0];
+      expect(comment).toHaveProperty('inhalt');
+      expect(comment).toHaveProperty('benutzer_id');
     });
   });
 
   describe('Rollen', () => {
     it('sollte alle verfügbaren Rollen abrufen können', async () => {
-      // const roles = await getRoles();
-      // expect(Array.isArray(roles)).toBe(true);
-      // expect(roles.length).toBe(3); // Admin, Support, User
-      expect(true).toBe(true);
+      const roles = await db.getRoles();
+      expect(Array.isArray(roles)).toBe(true);
+      expect(roles.length).toBeGreaterThan(0);
+
+      // Verify expected roles exist
+      const roleNames = roles.map(r => r.name);
+      expect(roleNames).toContain('Admin');
+      expect(roleNames).toContain('Support');
+      expect(roleNames).toContain('User');
     });
   });
 
   describe('Home Tickets nach Rolle', () => {
+    let adminUserId;
+    let supportUserId;
+    let regularUserId;
+
+    beforeEach(async () => {
+      // Create users with different roles
+      adminUserId = await db.createUser(
+        'Admin',
+        'User' + Date.now(),
+        'admin' + Date.now() + '@test.com',
+        'Pass123',
+        1
+      );
+      supportUserId = await db.createUser(
+        'Support',
+        'User' + Date.now(),
+        'support' + Date.now() + '@test.com',
+        'Pass123',
+        2
+      );
+      regularUserId = await db.createUser(
+        'Regular',
+        'User' + Date.now(),
+        'regular' + Date.now() + '@test.com',
+        'Pass123',
+        3
+      );
+    });
+
     it('Admin sollte zugewiesene Tickets sehen', async () => {
-      // Für Admin (role_id=1) sollten zugewiesene Tickets angezeigt werden
-      // const tickets = await getHomeTickets(1, 1);
-      // Alle sollten zugewiesen_an = 1 haben
-      expect(true).toBe(true);
+      // Create a ticket assigned to admin
+      await db.createTicket(
+        'Admin Task',
+        'Assigned to admin',
+        regularUserId,
+        1,
+        'Offen',
+        adminUserId
+      );
+
+      const tickets = await db.getHomeTickets(adminUserId, 1);
+      expect(Array.isArray(tickets)).toBe(true);
+      // Admin should see assigned tickets
+      tickets.forEach(ticket => {
+        expect(ticket.zugewiesen_an).toBe(adminUserId);
+      });
     });
 
     it('Support sollte zugewiesene Tickets sehen', async () => {
-      // Für Support (role_id=2) sollten zugewiesene Tickets angezeigt werden
-      expect(true).toBe(true);
+      // Create a ticket assigned to support
+      await db.createTicket(
+        'Support Task',
+        'Assigned to support',
+        regularUserId,
+        1,
+        'Offen',
+        supportUserId
+      );
+
+      const tickets = await db.getHomeTickets(supportUserId, 2);
+      expect(Array.isArray(tickets)).toBe(true);
+      // Support should see assigned tickets
+      tickets.forEach(ticket => {
+        expect(ticket.zugewiesen_an).toBe(supportUserId);
+      });
     });
 
     it('Normal User sollte erstellte Tickets sehen', async () => {
-      // Für User (role_id=3) sollten erstellte Tickets angezeigt werden
-      expect(true).toBe(true);
-    });
-  });
+      // Create a ticket by regular user
+      await db.createTicket(
+        'User Ticket',
+        'Created by regular user',
+        regularUserId,
+        1,
+        'Offen'
+      );
 
-  describe('Datenbank-Konsistenz', () => {
-    it('sollte keine Tickets ohne Benutzer erlauben', async () => {
-      // Wenn ein Benutzer gelöscht wird, sollten seine Tickets behandelt werden
-      expect(true).toBe(true);
-    });
-
-    it('sollte keine Kommentare ohne Ticket erlauben', async () => {
-      // Foreign Key Constraint testen
-      expect(true).toBe(true);
+      const tickets = await db.getHomeTickets(regularUserId, 3);
+      expect(Array.isArray(tickets)).toBe(true);
+      // Regular user should see created tickets
+      tickets.forEach(ticket => {
+        expect(ticket.erstellt_von).toBe(regularUserId);
+      });
     });
   });
 
   describe('Performance Tests', () => {
-    it('sollte 100+ Tickets effizient abrufen können', async () => {
-      // const startTime = Date.now();
-      // const tickets = await getTickets();
-      // const duration = Date.now() - startTime;
-      // expect(duration).toBeLessThan(1000); // Sollte weniger als 1 Sekunde dauern
-      expect(true).toBe(true);
+    it('sollte alle Tickets effizient abrufen können', async () => {
+      const startTime = Date.now();
+      const tickets = await db.getTickets();
+      const duration = Date.now() - startTime;
+
+      expect(Array.isArray(tickets)).toBe(true);
+      expect(duration).toBeLessThan(2000); // Should take less than 2 seconds
     });
 
     it('sollte gefilterte Tickets schnell abrufen', async () => {
-      // const startTime = Date.now();
-      // const tickets = await getAssignedTickets(1);
-      // const duration = Date.now() - startTime;
-      // expect(duration).toBeLessThan(500);
-      expect(true).toBe(true);
+      const userId = await db.createUser(
+        'PerfUser',
+        'Test' + Date.now(),
+        'perf' + Date.now() + '@test.com',
+        'Pass123',
+        3
+      );
+
+      // Create a ticket assigned to this user
+      await db.createTicket(
+        'Performance Test',
+        'Testing speed',
+        1,
+        1,
+        'Offen',
+        userId
+      );
+
+      const startTime = Date.now();
+      const tickets = await db.getAssignedTickets(userId);
+      const duration = Date.now() - startTime;
+
+      expect(Array.isArray(tickets)).toBe(true);
+      expect(duration).toBeLessThan(1000); // Should take less than 1 second
     });
   });
 });

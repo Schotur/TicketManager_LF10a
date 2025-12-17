@@ -3,147 +3,266 @@
  * Diese Tests zeigen die Struktur und können mit einer echten Test-DB ausgeführt werden
  */
 
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '../../.env') });
+
+// Import database functions
+const db = require('../../src/db');
+
 describe('Database Functions - Unit Tests', () => {
+  // Initialize pool before tests
+  beforeAll(() => {
+    db.initPool();
+  });
+
+  // Close pool after tests
+  afterAll(async () => {
+    await db.closePool();
+  });
+
   describe('Ticket Functions', () => {
-    test('getTickets sollte eine Liste zurückgeben', () => {
-      // Mock-Test zur Demonstrierung der Test-Struktur
-      const mockTickets = [
-        { ticket_id: 1, titel: 'Ticket 1' },
-        { ticket_id: 2, titel: 'Ticket 2' }
-      ];
-      expect(Array.isArray(mockTickets)).toBe(true);
-      expect(mockTickets.length).toBeGreaterThan(0);
+    test('getTickets sollte eine Liste zurückgeben', async () => {
+      const tickets = await db.getTickets();
+      expect(Array.isArray(tickets)).toBe(true);
+      expect(tickets.length).toBeGreaterThanOrEqual(0);
+      if (tickets.length > 0) {
+        expect(tickets[0]).toHaveProperty('ticket_id');
+        expect(tickets[0]).toHaveProperty('titel');
+      }
     });
 
-    test('createTicket sollte gültige Daten haben', () => {
+    test('createTicket sollte ein Ticket erstellen und ID zurückgeben', async () => {
       const ticketData = {
-        title: 'Test Ticket',
-        description: 'Test Description',
+        title: 'Test Ticket ' + Date.now(),
+        description: 'Test Description ' + Date.now(),
         customer_id: 1,
         category: 1,
-        status: 'offen'
+        status: 'Offen'
       };
-      expect(ticketData.title).toBeTruthy();
-      expect(ticketData.description).toBeTruthy();
-      expect(ticketData.customer_id).toBeGreaterThan(0);
-    });
-
-    test('updateTicket sollte Änderungen speichern können', () => {
-      const updatedData = {
-        titel: 'Aktualisiertes Ticket',
-        beschreibung: 'Neue Beschreibung',
-        status: 'geschlossen'
-      };
-      expect(updatedData.titel).not.toBe('Altes Ticket');
-      expect(updatedData.status).toBe('geschlossen');
-    });
-
-    test('deleteTicket sollte mit ID arbeiten', () => {
-      const ticketId = 1;
+      const ticketId = await db.createTicket(
+        ticketData.title,
+        ticketData.description,
+        ticketData.customer_id,
+        ticketData.category,
+        ticketData.status
+      );
       expect(typeof ticketId).toBe('number');
       expect(ticketId).toBeGreaterThan(0);
+      
+      // Verify the ticket was actually created
+      const ticket = await db.getTicket(ticketId);
+      expect(ticket).toBeDefined();
+      expect(ticket.titel).toBe(ticketData.title);
+      expect(ticket.beschreibung).toBe(ticketData.description);
     });
 
-    test('getTicket sollte einzelnes Ticket zurückgeben', () => {
-      const ticket = {
-        ticket_id: 1,
-        titel: 'Test Ticket',
-        beschreibung: 'Description'
+    test('updateTicket sollte Änderungen speichern können', async () => {
+      // First create a ticket
+      const ticketId = await db.createTicket(
+        'Update Test ' + Date.now(),
+        'Original Description',
+        1,
+        1,
+        'Offen'
+      );
+
+      // Now update it
+      const updatedData = {
+        titel: 'Aktualisiertes Ticket ' + Date.now(),
+        beschreibung: 'Neue Beschreibung',
+        status: 'Geschlossen'
       };
-      expect(ticket.ticket_id).toBe(1);
+      await db.updateTicket(ticketId, updatedData);
+
+      // Verify the update
+      const ticket = await db.getTicket(ticketId);
+      expect(ticket.titel).toBe(updatedData.titel);
+      expect(ticket.beschreibung).toBe(updatedData.beschreibung);
+      expect(ticket.status).toBe(updatedData.status);
+    });
+
+    test('getTicket sollte einzelnes Ticket zurückgeben', async () => {
+      // Create a ticket first
+      const ticketId = await db.createTicket(
+        'Get Test ' + Date.now(),
+        'Description for get test',
+        1,
+        1,
+        'Offen'
+      );
+
+      // Retrieve it
+      const ticket = await db.getTicket(ticketId);
+      expect(ticket).toBeDefined();
+      expect(ticket.ticket_id).toBe(ticketId);
       expect(ticket.titel).toBeTruthy();
+      expect(ticket.beschreibung).toBeTruthy();
+    });
+
+    test('deleteTicket sollte ein Ticket löschen', async () => {
+      // Create a ticket
+      const ticketId = await db.createTicket(
+        'Delete Test ' + Date.now(),
+        'To be deleted',
+        1,
+        1,
+        'Offen'
+      );
+
+      // Delete it
+      await db.deleteTicket(ticketId);
+
+      // Verify it's deleted (should return undefined or empty array)
+      const ticket = await db.getTicket(ticketId);
+      expect(ticket).toBeUndefined();
     });
   });
 
   describe('User Functions', () => {
-    test('getUser sollte User-Objekt zurückgeben', () => {
-      const user = {
-        benutzer_id: 1,
-        vorname: 'Max',
-        nachname: 'Mustermann',
-        email: 'max@test.com'
-      };
-      expect(user.benutzer_id).toBe(1);
-      expect(user.email).toMatch(/@/);
+    test('getUser sollte User-Objekt zurückgeben', async () => {
+      // Get a known user (assuming user_id 1 exists from setup)
+      const user = await db.getUser(1);
+      expect(user).toBeDefined();
+      expect(user).toHaveProperty('benutzer_id');
+      expect(user).toHaveProperty('vorname');
+      expect(user).toHaveProperty('email');
     });
 
-    test('createUser sollte gültige Email benötigen', () => {
-      const email = 'test@example.com';
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      expect(emailRegex.test(email)).toBe(true);
+    test('getUserByEmail sollte Benutzer nach Email finden', async () => {
+      // This test assumes a test user exists
+      const result = await db.getUserByEmail('test@example.com');
+      if (result && result.success && result.user) {
+        expect(result.user).toHaveProperty('benutzer_id');
+        expect(result.user).toHaveProperty('email');
+        expect(result.user.email).toContain('@');
+      }
     });
 
-    test('getUserByEmail sollte Email validieren', () => {
-      const email = 'test@example.com';
-      expect(email).toContain('@');
-      expect(email).toContain('.');
-    });
-
-    test('getUsers sollte Array zurückgeben', () => {
-      const users = [
-        { benutzer_id: 1, vorname: 'Max' },
-        { benutzer_id: 2, vorname: 'Anna' }
-      ];
+    test('getUsers sollte Array zurückgeben', async () => {
+      const users = await db.getUsers();
       expect(Array.isArray(users)).toBe(true);
-      expect(users.length).toBeGreaterThan(0);
+      expect(users.length).toBeGreaterThanOrEqual(0);
+      if (users.length > 0) {
+        expect(users[0]).toHaveProperty('benutzer_id');
+      }
     });
 
-    test('updateUser sollte alle Felder aktualisieren können', () => {
+    test('createUser sollte gültigen User erstellen', async () => {
       const userData = {
-        vorname: 'Maximiliana',
-        nachname: 'Mustermann',
-        email: 'max@example.com',
-        rolle_id: 2
+        vorname: 'Test',
+        nachname: 'User ' + Date.now(),
+        email: 'testuser' + Date.now() + '@example.com',
+        passwort: 'TestPassword123',
+        rolle_id: 3
       };
-      expect(userData.vorname).toBeTruthy();
-      expect(userData.rolle_id).toBeGreaterThan(0);
-    });
-
-    test('deleteUser sollte mit User ID arbeiten', () => {
-      const userId = 5;
+      
+      const userId = await db.createUser(
+        userData.vorname,
+        userData.nachname,
+        userData.email,
+        userData.passwort,
+        userData.rolle_id
+      );
+      
       expect(typeof userId).toBe('number');
       expect(userId).toBeGreaterThan(0);
+
+      // Verify user was created
+      const user = await db.getUser(userId);
+      expect(user).toBeDefined();
+      expect(user.vorname).toBe(userData.vorname);
+      expect(user.email).toBe(userData.email);
+    });
+
+    test('updateUser sollte User-Daten aktualisieren', async () => {
+      // Create a user first
+      const userId = await db.createUser(
+        'Update',
+        'User ' + Date.now(),
+        'updateuser' + Date.now() + '@example.com',
+        'Password123',
+        3
+      );
+
+      // Update the user
+      const updatedData = {
+        vorname: 'Aktualisiert',
+        nachname: 'Name ' + Date.now(),
+        rolle_id: 2
+      };
+      await db.updateUser(userId, updatedData);
+
+      // Verify update
+      const user = await db.getUser(userId);
+      expect(user.vorname).toBe(updatedData.vorname);
+      expect(user.nachname).toBe(updatedData.nachname);
     });
   });
 
   describe('Comment Functions', () => {
-    test('createComment sollte Text speichern können', () => {
-      const comment = {
-        ticket_id: 1,
+    test('createComment sollte Kommentar speichern', async () => {
+      // Create a ticket first
+      const ticketId = await db.createTicket(
+        'Comment Test ' + Date.now(),
+        'For comments',
+        1,
+        1,
+        'Offen'
+      );
+
+      // Create a comment
+      const commentData = {
+        ticket_id: ticketId,
         benutzer_id: 1,
-        inhalt: 'Dies ist ein Test-Kommentar'
+        inhalt: 'Dies ist ein Test-Kommentar ' + Date.now()
       };
-      expect(comment.inhalt.length).toBeGreaterThan(0);
-      expect(comment.ticket_id).toBeGreaterThan(0);
+      const commentId = await db.createComment(
+        commentData.ticket_id,
+        commentData.benutzer_id,
+        commentData.inhalt
+      );
+
+      expect(typeof commentId).toBe('number');
+      expect(commentId).toBeGreaterThan(0);
     });
 
-    test('getCommentsByTicket sollte Kommentare filtern', () => {
-      const comments = [
-        {
-          kommentar_id: 1,
-          ticket_id: 1,
-          inhalt: 'Kommentar 1'
-        },
-        {
-          kommentar_id: 2,
-          ticket_id: 1,
-          inhalt: 'Kommentar 2'
-        }
-      ];
-      const ticketComments = comments.filter(c => c.ticket_id === 1);
-      expect(ticketComments.length).toBe(2);
+    test('getCommentsByTicket sollte Kommentare eines Tickets filtern', async () => {
+      // Create a ticket
+      const ticketId = await db.createTicket(
+        'Comment Filter Test ' + Date.now(),
+        'For filtering comments',
+        1,
+        1,
+        'Offen'
+      );
+
+      // Create two comments
+      await db.createComment(ticketId, 1, 'Comment 1 ' + Date.now());
+      await db.createComment(ticketId, 1, 'Comment 2 ' + Date.now());
+
+      // Get comments for this ticket
+      const comments = await db.getCommentsByTicket(ticketId);
+      expect(Array.isArray(comments)).toBe(true);
+      expect(comments.length).toBeGreaterThanOrEqual(2);
+      
+      // Verify all comments belong to this ticket
+      comments.forEach(comment => {
+        expect(comment.ticket_id).toBe(ticketId);
+      });
     });
   });
 
   describe('Role Functions', () => {
-    test('getRoles sollte 3 Rollen zurückgeben', () => {
-      const roles = [
-        { rolle_id: 1, name: 'Admin' },
-        { rolle_id: 2, name: 'Support' },
-        { rolle_id: 3, name: 'User' }
-      ];
-      expect(roles.length).toBe(3);
-      expect(roles[0].name).toBe('Admin');
+    test('getRoles sollte verfügbare Rollen zurückgeben', async () => {
+      const roles = await db.getRoles();
+      expect(Array.isArray(roles)).toBe(true);
+      expect(roles.length).toBeGreaterThan(0);
+      
+      // Verify role structure
+      roles.forEach(role => {
+        expect(role).toHaveProperty('rolle_id');
+        expect(role).toHaveProperty('name');
+      });
     });
   });
 
@@ -168,8 +287,8 @@ describe('Database Functions - Unit Tests', () => {
     });
 
     test('Ticket-Status sollte gültig sein', () => {
-      const validStatuses = ['offen', 'in_bearbeitung', 'geschlossen'];
-      const status = 'offen';
+      const validStatuses = ['Offen', 'In Bearbeitung', 'Geschlossen'];
+      const status = 'Offen';
       
       expect(validStatuses).toContain(status);
     });
@@ -188,12 +307,8 @@ describe('Database Functions - Unit Tests', () => {
       expect(ticketId > 0).toBe(true);
     });
 
-    test('Rollen sollten eindeutige IDs haben', () => {
-      const roles = [
-        { rolle_id: 1, name: 'Admin' },
-        { rolle_id: 2, name: 'Support' },
-        { rolle_id: 3, name: 'User' }
-      ];
+    test('Rollen sollten eindeutige IDs haben', async () => {
+      const roles = await db.getRoles();
       const ids = roles.map(r => r.rolle_id);
       expect(new Set(ids).size).toBe(ids.length);
     });

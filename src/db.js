@@ -374,4 +374,11 @@ async function getCommentsByTicket(ticket_id) {
   }
 }
 
-module.exports = { getTickets, getAssignedTickets, getTicketsByCreator, getHomeTickets, getTicket, createTicket, updateTicket, deleteTicket, getUser, getUserByEmail, getUsers, createUser, updateUser, deleteUser, getRoles, createComment, getCommentsByTicket, pool, autoSetup };
+/** Closes the connection pool */
+async function closePool() {
+  if (pool) {
+    await pool.end();
+  }
+}
+
+module.exports = { getTickets, getAssignedTickets, getTicketsByCreator, getHomeTickets, getTicket, createTicket, updateTicket, deleteTicket, getUser, getUserByEmail, getUsers, createUser, updateUser, deleteUser, getRoles, createComment, getCommentsByTicket, pool, autoSetup, initPool, closePool };
