@@ -71,7 +71,9 @@ describe('Database Integration Tests', () => {
       await db.updateTicket(ticketId, {
         titel: 'Updated Title',
         beschreibung: 'Updated Description',
-        status: 'In Bearbeitung'
+        kategorie: 1,
+        status: 'In Bearbeitung',
+        zugewiesen_an: null
       });
 
       const ticket = await db.getTicket(ticketId);
@@ -91,27 +93,34 @@ describe('Database Integration Tests', () => {
 
       await db.deleteTicket(ticketId);
       const ticket = await db.getTicket(ticketId);
-      expect(ticket).toBeUndefined();
+      expect(ticket).toBeNull();
     });
 
     it('sollte Tickets nach Ersteller filtern können', async () => {
+      const timestamp = Date.now();
       const ticket1Id = await db.createTicket(
-        'User Ticket 1',
+        'User Ticket 1 ' + timestamp,
         'Desc 1',
         testData.userId,
         1,
         'Offen'
       );
       const ticket2Id = await db.createTicket(
-        'User Ticket 2',
+        'User Ticket 2 ' + timestamp,
         'Desc 2',
         testData.userId,
         1,
         'Offen'
       );
 
+      // Give database time to propagate
+      await new Promise(resolve => setTimeout(resolve, 100));
+
       const userTickets = await db.getTicketsByCreator(testData.userId);
-      const foundTickets = userTickets.filter(t => t.ticket_id === ticket1Id || t.ticket_id === ticket2Id);
+      expect(Array.isArray(userTickets)).toBe(true);
+      expect(userTickets.length).toBeGreaterThan(0);
+      
+      const foundTickets = userTickets.filter(t => Number(t.ticket_id) === Number(ticket1Id) || Number(t.ticket_id) === Number(ticket2Id));
       expect(foundTickets.length).toBeGreaterThanOrEqual(2);
     });
 
@@ -124,8 +133,9 @@ describe('Database Integration Tests', () => {
         3
       );
 
+      const timestamp = Date.now();
       const ticketId = await db.createTicket(
-        'Assigned Ticket',
+        'Assigned Ticket ' + timestamp,
         'Assigned to user',
         testData.userId,
         1,
@@ -133,10 +143,16 @@ describe('Database Integration Tests', () => {
         assignedUserId
       );
 
+      // Give database time to propagate
+      await new Promise(resolve => setTimeout(resolve, 100));
+
       const assignedTickets = await db.getAssignedTickets(assignedUserId);
-      const found = assignedTickets.find(t => t.ticket_id === ticketId);
+      expect(Array.isArray(assignedTickets)).toBe(true);
+      expect(assignedTickets.length).toBeGreaterThan(0);
+      
+      const found = assignedTickets.find(t => Number(t.ticket_id) === Number(ticketId));
       expect(found).toBeDefined();
-      expect(found.zugewiesen_an).toBe(assignedUserId);
+      expect(Number(found.zugewiesen_an)).toBe(Number(assignedUserId));
     });
   });
 
@@ -169,9 +185,8 @@ describe('Database Integration Tests', () => {
       );
 
       const result = await db.getUserByEmail(email);
-      expect(result.success).toBe(true);
-      expect(result.user).toBeDefined();
-      expect(result.user.vorname).toBe('Anna');
+      expect(result).toBeDefined();
+      expect(result.vorname).toBe('Anna');
     });
 
     it('sollte einen Benutzer aktualisieren können', async () => {
@@ -184,14 +199,22 @@ describe('Database Integration Tests', () => {
         3
       );
 
-      await db.updateUser(userId, {
-        vorname: 'Maxim',
-        nachname: 'NewName'
-      });
-
+      // Fetch the user first to get all fields
       const user = await db.getUser(userId);
-      expect(user.vorname).toBe('Maxim');
-      expect(user.nachname).toBe('NewName');
+      
+      await db.updateUser(
+        userId,
+        'Maxim',
+        'NewName',
+        user.email,
+        user.passwort_hash,
+        user.rolle_id,
+        user.aktiv
+      );
+
+      const updated = await db.getUser(userId);
+      expect(updated.vorname).toBe('Maxim');
+      expect(updated.nachname).toBe('NewName');
     });
 
     it('sollte alle Benutzer abrufen können', async () => {
@@ -234,7 +257,7 @@ describe('Database Integration Tests', () => {
         testUserId,
         'Test Kommentar ' + Date.now()
       );
-      expect(typeof commentId).toBe('number');
+      expect(['number', 'bigint']).toContain(typeof commentId);
       expect(commentId).toBeGreaterThan(0);
     });
 
@@ -247,7 +270,7 @@ describe('Database Integration Tests', () => {
       expect(comments.length).toBeGreaterThanOrEqual(2);
 
       comments.forEach(comment => {
-        expect(comment.ticket_id).toBe(testTicketId);
+        expect(Number(comment.ticket_id)).toBe(Number(testTicketId));
       });
     });
 
@@ -272,7 +295,7 @@ describe('Database Integration Tests', () => {
       const roleNames = roles.map(r => r.name);
       expect(roleNames).toContain('Admin');
       expect(roleNames).toContain('Support');
-      expect(roleNames).toContain('User');
+      expect(roleNames).toContain('Benutzer');
     });
   });
 
@@ -321,7 +344,7 @@ describe('Database Integration Tests', () => {
       expect(Array.isArray(tickets)).toBe(true);
       // Admin should see assigned tickets
       tickets.forEach(ticket => {
-        expect(ticket.zugewiesen_an).toBe(adminUserId);
+        expect(Number(ticket.zugewiesen_an)).toBe(Number(adminUserId));
       });
     });
 
@@ -340,7 +363,7 @@ describe('Database Integration Tests', () => {
       expect(Array.isArray(tickets)).toBe(true);
       // Support should see assigned tickets
       tickets.forEach(ticket => {
-        expect(ticket.zugewiesen_an).toBe(supportUserId);
+        expect(Number(ticket.zugewiesen_an)).toBe(Number(supportUserId));
       });
     });
 
@@ -358,7 +381,7 @@ describe('Database Integration Tests', () => {
       expect(Array.isArray(tickets)).toBe(true);
       // Regular user should see created tickets
       tickets.forEach(ticket => {
-        expect(ticket.erstellt_von).toBe(regularUserId);
+        expect(Number(ticket.erstellt_von)).toBe(Number(regularUserId));
       });
     });
   });

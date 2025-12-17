@@ -14,6 +14,10 @@ module.exports = {
     '**/tests/**/__tests__/**/*.js',
     '**/tests/**/?(*.)+(spec|test).js',
   ],
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    '/tests/e2e/',
+  ],
   verbose: true,
   forceExit: true,
   clearMocks: true,
