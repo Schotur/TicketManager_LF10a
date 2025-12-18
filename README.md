@@ -14,7 +14,7 @@ A ticket management system for organizing and tracking support tickets.
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/TicketManager_LF10a.git
+git clone https://github.com/Schotur/TicketManager_LF10a.git
 
 # Navigate to project directory
 cd TicketManager_LF10a
